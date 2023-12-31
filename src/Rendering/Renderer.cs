@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-using System.Reflection.Metadata;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -15,10 +12,8 @@ public struct RenderJob
 
 public class Renderer
 {
-	public static Shader DefaultShader;
+	public static ShaderProgram DefaultShader;
 	GameWindow window;
-	Matrix4 viewMatrix;
-	Matrix4 projectionMatrix;
 
 	int VAO;
 	int VBO;
@@ -31,7 +26,7 @@ public class Renderer
 	Vector3 lightPosition = new Vector3( -2, -16, 2 );
 	public bool ShadersNeedReloading = false;
 
-	public Renderer( SourWindow window, Camera cam )
+	public Renderer( Game window, Camera cam )
 	{
 		this.window = window;
 		this.cam = cam;
@@ -43,20 +38,12 @@ public class Renderer
 		VBO = GL.GenBuffer();
 		EBO = GL.GenBuffer();
 
-		DefaultShader = new Shader(
-			Shader.DefaultVertexShaderPath,
-			Shader.DefaultFragmentShaderPath
+		DefaultShader = new ShaderProgram(
+			ShaderProgram.DefaultVertexShaderPath,
+			ShaderProgram.DefaultFragmentShaderPath
 		);
 
-		viewMatrix = Matrix4.LookAt( cam.Transform.Position, Vector3.Zero, Vector3.UnitY );
-		projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
-			MathHelper.DegreesToRadians( 90 ),
-			window.ClientSize.X / (float)window.ClientSize.Y,
-			0.1f,
-			300.0f
-		);
-
-		Shader.OnFileChanged += () => { ShadersNeedReloading = true; };
+		ShaderProgram.OnFileChanged += () => { ShadersNeedReloading = true; };
 	}
 
 	public void Render( FrameEventArgs args )
@@ -89,19 +76,6 @@ public class Renderer
 
 		if ( keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
-
-		// Update view matrix based on camera position and orientation
-		viewMatrix = Matrix4.LookAt(
-			cam.Transform.Position,
-			cam.Transform.Position + cam.Transform.Forward,
-			Vector3.UnitY
-		);
-		projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
-			MathHelper.DegreesToRadians( cam.FieldOfView ),
-			window.ClientSize.X / (float)(window.ClientSize.Y),
-			0.1f,
-			100.0f
-		);
 	}
 
 	public void PushJob( RenderJob job )
@@ -136,8 +110,7 @@ public class Renderer
 				);
 			}
 
-			var shaderHandle = job.Model.Shader is null ? DefaultShader.ProgramHandle : job.Model.Shader.ProgramHandle;
-			UseShader( job.Model.Shader, ref job.Matrix );
+			UseShader( job.Model.Shader is null ? DefaultShader : job.Model.Shader, ref job.Matrix );
 
 			if ( indices.Length > 0 )
 				GL.DrawElements(
@@ -159,14 +132,14 @@ public class Renderer
 		GL.UseProgram( 0 );
 	}
 
-	private void UseShader( Shader shader, ref Matrix4 model )
+	private void UseShader( ShaderProgram shader, ref Matrix4 model )
 	{
 		var handle = shader.ProgramHandle;
 		GL.UseProgram( handle );
 
 		shader.SetUniformMatrix4( "model", ref model );
-		shader.SetUniformMatrix4( "view", ref viewMatrix );
-		shader.SetUniformMatrix4( "projection", ref projectionMatrix );
+		shader.SetUniformMatrix4( "view", ref cam.ViewMatrix );
+		shader.SetUniformMatrix4( "projection", ref cam.ProjectionMatrix );
 
 		var aPos = GL.GetAttribLocation( handle, "aPos" );
 		GL.EnableVertexAttribArray( aPos );

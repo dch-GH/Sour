@@ -1,15 +1,14 @@
-﻿using OpenTK.Mathematics;
+﻿namespace Sour;
 
-namespace Sour;
 public struct Transform
 {
-	public Vector3 Position;
-	public Quaternion Rotation;
+	public Vector3 Position = Vector3.Zero;
+	public Quaternion Rotation = Quaternion.Identity;
 
-	public Transform()
+	public Transform( Vector3 pos, Quaternion rot )
 	{
-		Position = Vector3.Zero;
-		Rotation = Quaternion.Identity;
+		Position = pos;
+		Rotation = rot;
 	}
 
 	public Vector3 Forward => Rotation * Vector3.UnitZ;

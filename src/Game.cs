@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Globalization;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -11,13 +12,16 @@ public struct Face
 	public uint[] Indices;
 }
 
-public sealed class SourWindow : GameWindow
+public sealed class Game : GameWindow
 {
+	public static Vector2 ScreenSize;
+	public static KeyboardState Keyboard;
+
 	List<Assimp.Vector3D> importedVerts;
 	List<uint> importedIndices;
 
 	Vector3 lookAngles;
-	Camera MainCamera = new();
+	Camera MainCamera;
 	float moveSpeed = 6;
 	float lookSpeed = 3;
 
@@ -26,19 +30,24 @@ public sealed class SourWindow : GameWindow
 	Model monkey;
 	Model cone;
 
-	public SourWindow( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
+	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
 	}
 
 	protected override void OnLoad()
 	{
 		base.OnLoad();
+
+		ScreenSize = ClientSize;
+		MainCamera = new Camera( new Vector3( 0, 0, -5 ), Quaternion.Identity );
+		Camera.Main = MainCamera;
+		DebugDraw.Init();
+
 		renderer = new( this, MainCamera );
-		monkey = new Model( "Resources/Models/Suzanne/Suzanne.obj" );
+		monkey = new Model( "Resources/Models/Box/box.fbx" );
 		// cone = new Model( "Resources/Models/Cone/cone.obj" );
 		cone = new Model( "Resources/Models/Cone/cone.obj", fragShaderPath: "Resources/Shaders/otherfrag.glsl" );
 		cone.Transform.Position += Vector3.UnitX * 3f;
-		MainCamera.Transform.Position = new Vector3( 0, 0, -5 );
 	}
 
 	public override void Run()
@@ -49,9 +58,11 @@ public sealed class SourWindow : GameWindow
 	protected override void OnRenderFrame( FrameEventArgs args )
 	{
 		base.OnRenderFrame( args );
+		MainCamera.Update( args );
 		monkey.Render( renderer );
 		cone.Render( renderer );
 		renderer.Render( args );
+		DebugDraw.Update( args );
 		SwapBuffers();
 	}
 
@@ -59,6 +70,7 @@ public sealed class SourWindow : GameWindow
 	{
 		base.OnResize( e );
 		GL.Viewport( 0, 0, e.Width, e.Height );
+		ScreenSize = ClientSize;
 	}
 
 	float accum = 0;
@@ -67,6 +79,7 @@ public sealed class SourWindow : GameWindow
 		base.OnUpdateFrame( args );
 		var dt = ((float)args.Time);
 		var keyboard = KeyboardState;
+		Keyboard = keyboard;
 
 		renderer.Update( args, keyboard );
 

@@ -14,7 +14,7 @@ public class Program
 		Console.WriteLine( "Hello, World!" );
 		var native = NativeWindowSettings.Default;
 		native.ClientSize = new Vector2i( 800, 900 );
-		var window = new SourWindow( GameWindowSettings.Default, native );
+		var window = new Game( GameWindowSettings.Default, native );
 
 		window.Run();
 	}

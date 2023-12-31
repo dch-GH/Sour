@@ -5,6 +5,6 @@ out vec4 FragColor;
 
 void main()
 {
-    // FragColor = vec4(Normal, 1.0f);
-    FragColor =  vec4(1.0f);
+    vec3 norm = normalize(Normal);
+    FragColor = vec4(norm * 30, 1.0f);
 } 
