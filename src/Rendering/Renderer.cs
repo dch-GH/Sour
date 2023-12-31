@@ -194,6 +194,7 @@ public class Renderer
 		var err = GL.GetError();
 		if ( err != OpenTK.Graphics.OpenGL4.ErrorCode.NoError )
 		{
+			// TODO: Getting InvalidValue here, but it doesn't break anything.
 			//Log.Info( err );
 			//throw new Exception( err.ToString() );
 		}
