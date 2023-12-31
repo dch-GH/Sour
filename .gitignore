@@ -1,6 +1,9 @@
 ﻿Properties
 .intermediate
 *.csproj
+*.exe
+*.dll
+*.pdb
 
 # User-specific files
 *.rsuser
