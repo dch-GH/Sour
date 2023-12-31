@@ -13,7 +13,7 @@ public struct Face
 
 
 
-internal sealed class SourWindow : GameWindow
+public sealed class SourWindow : GameWindow
 {
 	List<Assimp.Vector3D> importedVerts;
 	List<uint> importedIndices;
@@ -37,8 +37,9 @@ internal sealed class SourWindow : GameWindow
 		base.OnLoad();
 		renderer = new( this, MainCamera );
 		monkey = new Model( "Resources/Models/Suzanne/Suzanne.obj" );
-		cone = new Model( "Resources/Models/Cone/cone.obj" );
-		cone.Transform.Position += Vector3.UnitX * 1f;
+		// cone = new Model( "Resources/Models/Cone/cone.obj" );
+		cone = new Model( "Resources/Models/Cone/cone.obj", fragShaderPath: "Resources/Shaders/otherfrag.glsl" );
+		cone.Transform.Position += Vector3.UnitX * 3f;
 		MainCamera.Transform.Position = new Vector3( 0, 0, -5 );
 	}
 
@@ -93,47 +94,12 @@ internal sealed class SourWindow : GameWindow
 		if ( keyboard.IsKeyDown( Keys.Right ) )
 			lookAngles -= Vector3.UnitY * lookSpeed * dt;
 		accum += dt;
+
 		monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, accum );
 		cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, accum * 2 );
+
 		MainCamera.Transform.Position += wishDir;
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
 
 	}
-
-
-	////	static Vector3[] vertices = {
-	////	 new Vector3(0.5f,  0.5f, 0.0f),  // top right
-	////    new Vector3( 0.5f, -0.5f, 0.0f),  // bottom right
-	////   new Vector3( -0.5f, -0.5f, 0.0f),  // bottom left
-	////   new Vector3( -0.5f,  0.5f, 0.0f)   // top left
-	////};
-
-	////	static uint[] indices = {  // note that we start from 0!
-	////    0, 1, 3,   // first triangle
-	////    1, 2, 3    // second triangle
-	////};
-	//public static Face MakeFaceUp( Vector3 origin, float size = 1 )
-	//{
-	//	var face = new Face();
-	//	face.Vertices = new Vector3[4];
-	//	face.Indices = new uint[6];
-
-	//	//face.Vertices[0] = origin + new Vector3( size, size, 0 );
-	//	//face.Vertices[1] = origin + new Vector3( size, -size, 0 );
-	//	//face.Vertices[2] = origin + new Vector3( -size, -size, 0 );
-	//	//face.Vertices[3] = origin + new Vector3( -size, size, 0 );
-
-	//	//face.Indices[0] = 0;
-	//	//face.Indices[1] = 1;
-	//	//face.Indices[2] = 3;
-
-	//	//face.Indices[3] = 1;
-	//	//face.Indices[4] = 2;
-	//	//face.Indices[5] = 3;
-
-	//	//face.Vertices = vertices;
-	//	//face.Indices = importedIndices;
-
-	//	return face;
-	//}
 }

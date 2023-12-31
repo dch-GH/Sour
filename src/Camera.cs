@@ -1,5 +1,6 @@
 ﻿namespace Sour;
-internal class Camera
+public class Camera
 {
 	public Transform Transform;
+	public float FieldOfView = 90;
 }

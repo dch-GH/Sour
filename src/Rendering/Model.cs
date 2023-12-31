@@ -1,42 +1,52 @@
-﻿using OpenTK.Mathematics;
+﻿namespace Sour;
 
-namespace Sour;
-
-internal class Model
+public class Model
 {
 	public Transform Transform = new();
-	private Assimp.Vector3D[] importedVerts;
-	private uint[] importedIndices;
+	public Shader? Shader;
+	public Assimp.Vector3D[] Vertices;
+	public uint[] Indices;
 
-	public Model( string path )
+	public Model( string path, string? vtxShaderPath = null, string? fragShaderPath = null )
 	{
 		var ctx = new Assimp.AssimpContext();
 		var imported = ctx.ImportFile( path, Assimp.PostProcessSteps.Triangulate );
 
 		List<Assimp.Vector3D> verts = new();
 		List<uint> indices = new();
-
 		foreach ( var mesh in imported.Meshes )
 		{
+			var normals = mesh.Normals;
+			var vertIndex = 0;
 			foreach ( var v in mesh.Vertices )
+			{
 				verts.Add( v );
+				if ( mesh.HasNormals )
+					verts.Add( normals[vertIndex] );
+
+				vertIndex += 1;
+			}
 
 			foreach ( var i in mesh.GetUnsignedIndices() )
 				indices.Add( i );
 		}
 
-		importedVerts = verts.ToArray();
-		importedIndices = indices.ToArray();
+		Vertices = verts.ToArray();
+		Indices = indices.ToArray();
+
+		vtxShaderPath ??= Shader.DefaultVertexShaderPath;
+		fragShaderPath ??= Shader.DefaultFragmentShaderPath;
+
+		Shader = new Shader( vtxShaderPath, fragShaderPath );
 	}
 
 	public void Render( Renderer r )
 	{
-		r.PushJob( new RenderJob
+		var job = new RenderJob
 		{
-			Vertices = importedVerts,
-			Indices = importedIndices,
-			ModelMatrix = Transform.Matrix,
-			ShaderHandle = 0
-		} );
+			Model = this,
+			Matrix = Transform.Matrix
+		};
+		r.PushJob( job );
 	}
 }
