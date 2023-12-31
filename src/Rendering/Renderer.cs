@@ -29,6 +29,7 @@ public class Renderer
 	Queue<RenderJob> renderJobs;
 
 	Vector3 lightPosition = new Vector3( -2, -16, 2 );
+	public bool ShadersNeedReloading = false;
 
 	public Renderer( SourWindow window, Camera cam )
 	{
@@ -54,6 +55,8 @@ public class Renderer
 			0.1f,
 			300.0f
 		);
+
+		Shader.OnFileChanged += () => { ShadersNeedReloading = true; };
 	}
 
 	public void Render( FrameEventArgs args )
@@ -62,6 +65,17 @@ public class Renderer
 		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		if ( renderJobs.Count <= 0 )
 			return;
+
+		if ( ShadersNeedReloading )
+		{
+			Log.Info( "Reloading shaders..." );
+			while ( renderJobs.TryDequeue( out var currentJob ) )
+			{
+				currentJob.Model.ReloadShaders();
+			}
+			ShadersNeedReloading = false;
+			return;
+		}
 
 		while ( renderJobs.TryDequeue( out var currentJob ) )
 		{
@@ -125,8 +139,6 @@ public class Renderer
 			var shaderHandle = job.Model.Shader is null ? DefaultShader.ProgramHandle : job.Model.Shader.ProgramHandle;
 			UseShader( job.Model.Shader, ref job.Matrix );
 
-			// GL.Enable( EnableCap.CullFace );
-			// GL.CullFace( CullFaceMode.Front );
 			if ( indices.Length > 0 )
 				GL.DrawElements(
 					wireFrame ? PrimitiveType.Lines : PrimitiveType.Triangles,
@@ -144,6 +156,7 @@ public class Renderer
 		GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 		GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
 		GL.BindVertexArray( 0 );
+		GL.UseProgram( 0 );
 	}
 
 	private void UseShader( Shader shader, ref Matrix4 model )
@@ -158,7 +171,7 @@ public class Renderer
 		var aPos = GL.GetAttribLocation( handle, "aPos" );
 		GL.EnableVertexAttribArray( aPos );
 		GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 6 * sizeof( float ), 0 );
-		
+
 		var aNormal = GL.GetAttribLocation( handle, "aNormal" );
 		GL.EnableVertexAttribArray( aNormal );
 		GL.VertexAttribPointer(

@@ -49,4 +49,9 @@ public class Model
 		};
 		r.PushJob( job );
 	}
+
+	public void ReloadShaders()
+	{
+		Shader?.Reload();
+	}
 }

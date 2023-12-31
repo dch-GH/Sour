@@ -11,8 +11,6 @@ public struct Face
 	public uint[] Indices;
 }
 
-
-
 public sealed class SourWindow : GameWindow
 {
 	List<Assimp.Vector3D> importedVerts;

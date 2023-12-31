@@ -1,6 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL4;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Sour;
 
@@ -15,6 +13,9 @@ public class Shader
 
 	readonly string vtxPath;
 	readonly string fragpath;
+	FileSystemWatcher watcher;
+
+	public static Action OnFileChanged;
 
 	public Shader( string vtxShaderPath, string fragShaderPath )
 	{
@@ -25,6 +26,15 @@ public class Shader
 
 		var log = GL.GetProgramInfoLog( ProgramHandle );
 		Console.WriteLine( log );
+
+		watcher = new FileSystemWatcher( Path.GetDirectoryName( vtxShaderPath ) );
+		watcher.EnableRaisingEvents = true;
+		watcher.Changed += Watcher_Changed;
+	}
+
+	private void Watcher_Changed( object sender, FileSystemEventArgs e )
+	{
+		OnFileChanged?.Invoke();
 	}
 
 	public void Reload()
@@ -39,18 +49,20 @@ public class Shader
 
 		GL.LinkProgram( ProgramHandle );
 
-		//GL.DetachShader( ProgramHandle, VertexHandle );
-		//GL.DetachShader( ProgramHandle, FragmentHandle );
+		GL.DetachShader( ProgramHandle, VertexHandle );
+		GL.DetachShader( ProgramHandle, FragmentHandle );
 
-		// GL.DeleteShader( VertexHandle );
-		// GL.DeleteShader( FragmentHandle );
+		GL.DeleteShader( VertexHandle );
+		GL.DeleteShader( FragmentHandle );
 	}
 
 	private int LoadShader( ShaderType shaderType, string path )
 	{
 		var handle = GL.CreateShader( shaderType );
 
-		var shaderSource = File.ReadAllText( path );
+		var shaderFile = File.Open( path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite );
+		var sr = new StreamReader( shaderFile );
+		var shaderSource = sr.ReadToEnd();
 		GL.ShaderSource( handle, shaderSource );
 		GL.CompileShader( handle );
 
@@ -63,12 +75,9 @@ public class Shader
 		else
 			Console.WriteLine( $"Yay we compiled the {shaderType} :)" );
 
+		sr.Close();
+		shaderFile.Close();
 		return handle;
-	}
-
-	public void Use()
-	{
-		GL.UseProgram( ProgramHandle );
 	}
 
 	public bool SetUniformMatrix4( string name, ref Matrix4 matrix )
