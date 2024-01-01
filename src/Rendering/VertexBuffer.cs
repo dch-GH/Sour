@@ -20,8 +20,6 @@ public sealed class VertexBuffer
 	public int VBO { get; private set; }
 	public int EBO { get; private set; }
 
-	public bool Wireframe = true;
-
 	public VertexBuffer()
 	{
 		VAO = GL.GenVertexArray();
@@ -31,7 +29,7 @@ public sealed class VertexBuffer
 		EBO = GL.GenBuffer();
 	}
 
-	public void Draw( Assimp.Vector3D[] vertices, uint[]? indices, Material shader, ref Matrix4 model, params ShaderUniformVariable[] uniforms )
+	public void Draw( Assimp.Vector3D[] vertices, uint[]? indices, Material shader, ref Matrix4 model, bool wireFrame = false, params ShaderUniformVariable[] uniforms )
 	{
 		GL.BindVertexArray( VAO );
 		{
@@ -58,14 +56,14 @@ public sealed class VertexBuffer
 
 			if ( indices is not null )
 				GL.DrawElements(
-					Wireframe ? PrimitiveType.Lines : PrimitiveType.Triangles,
+					wireFrame ? PrimitiveType.Lines : PrimitiveType.Triangles,
 					indices.Length,
 					DrawElementsType.UnsignedInt,
 					0
 				);
 			else
 				GL.DrawArrays(
-					Wireframe ? PrimitiveType.Lines : PrimitiveType.Triangles,
+					wireFrame ? PrimitiveType.Lines : PrimitiveType.Triangles,
 					0,
 					vertices.Length
 				);
@@ -86,8 +84,30 @@ public sealed class VertexBuffer
 		material.TrySetUniformMatrix4( "projection", ref Camera.Main.ProjectionMatrix );
 
 		var aPos = GL.GetAttribLocation( handle, "aPos" );
-		GL.EnableVertexAttribArray( aPos );
-		GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
+		if ( aPos < 0 )
+			throw new Exception( $"Expect a vertex position attribute in material: {material}" );
+
+		if ( material.TryGetAttribLocation( "aNormal", out var aNormal ) )
+		{
+			GL.EnableVertexAttribArray( aPos );
+			GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 6 * sizeof( float ), 0 );
+
+			GL.EnableVertexAttribArray( aNormal );
+			GL.VertexAttribPointer(
+				aNormal,
+				3,
+				VertexAttribPointerType.Float,
+				false,
+				6 * sizeof( float ),
+				0
+			);
+		}
+		else
+		{
+			GL.EnableVertexAttribArray( aPos );
+			GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
+		}
+
 
 		if ( uniforms.Length <= 0 )
 			return;

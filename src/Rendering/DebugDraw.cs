@@ -29,6 +29,7 @@ public static class DebugDraw
 		{
 			var matrix = Matrix4.CreateTranslation( Vector3.Zero ) * Matrix4.CreateFromQuaternion( Quaternion.Identity );
 			vb.Draw( mission.Vertices, null, DebugDrawShader, ref matrix,
+				wireFrame: true,
 				new( "time", Time.Elapsed ),
 				new( "color", mission.Color ),
 				new( "dashSize", 10f ),

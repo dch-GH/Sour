@@ -48,12 +48,12 @@ public class Model
 
 	public void Render( ModelRenderer r )
 	{
-		var job = new RenderJob
+		var job = new ModelDrawMission
 		{
 			Model = this,
 			Matrix = Transform.Matrix
 		};
-		r.PushModel( job );
+		r.PushModelMission( job );
 
 		var index = 0;
 		foreach ( var v in Vertices )

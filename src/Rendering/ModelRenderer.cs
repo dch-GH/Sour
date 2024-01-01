@@ -4,7 +4,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sour;
 
-public struct RenderJob
+public struct ModelDrawMission
 {
 	public Model Model;
 	public Matrix4 Matrix;
@@ -13,30 +13,24 @@ public struct RenderJob
 public class ModelRenderer
 {
 	public static Material DefaultShader;
-	GameWindow window;
 
 	int VAO;
 	int VBO;
 	int EBO;
 
 	bool wireFrame = false;
-	Camera cam;
-	Queue<RenderJob> renderJobs;
+	Camera camera;
+
+	Queue<ModelDrawMission> modelMissions;
+	VertexBuffer vb;
 
 	Vector3 lightPosition = new Vector3( -2, -16, 2 );
 
 	public ModelRenderer( Game window, Camera cam )
 	{
-		this.window = window;
-		this.cam = cam;
-		renderJobs = new();
-
-		VAO = GL.GenVertexArray();
-		GL.BindVertexArray( VAO );
-
-		VBO = GL.GenBuffer();
-		EBO = GL.GenBuffer();
-
+		camera = cam;
+		modelMissions = new();
+		vb = new();
 		DefaultShader = new Material(
 			Material.DefaultVertexShaderPath,
 			Material.DefaultFragmentShaderPath
@@ -47,12 +41,12 @@ public class ModelRenderer
 	{
 		GL.ClearColor( 0.05f, 0.25f, 0.3f, 1 );
 		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
-		if ( renderJobs.Count <= 0 )
+		if ( modelMissions.Count <= 0 )
 			return;
 
-		while ( renderJobs.TryDequeue( out var currentJob ) )
+		while ( modelMissions.TryDequeue( out var mission ) )
 		{
-			DoRenderJob( currentJob );
+			DrawModel( mission );
 		}
 	}
 
@@ -63,92 +57,25 @@ public class ModelRenderer
 		if ( keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
 
-		lightPosition = cam.Transform.Position + Vector3.UnitY * 2;
+		lightPosition = camera.Transform.Position + Vector3.UnitY * 2;
 	}
 
-	public void PushModel( RenderJob job )
+	public void PushModelMission( ModelDrawMission mission )
 	{
-		renderJobs.Enqueue( job );
+		modelMissions.Enqueue( mission );
 	}
 
-	private void DoRenderJob( RenderJob job )
+	private void DrawModel( ModelDrawMission mission )
 	{
+		var model = mission.Model;
+
 		GL.Enable( EnableCap.CullFace );
-		GL.BindVertexArray( VAO );
-		{
-			var vertices = job.Model.Vertices;
-			var indices = job.Model.Indices;
-
-			GL.BindBuffer( BufferTarget.ArrayBuffer, VBO );
-			GL.BufferData(
-				BufferTarget.ArrayBuffer,
-				sizeof( float ) * 3 * vertices.Length,
-				vertices,
-				BufferUsageHint.DynamicDraw
-			);
-
-			if ( job.Model.Indices.Length > 0 )
-			{
-				GL.BindBuffer( BufferTarget.ElementArrayBuffer, EBO );
-				GL.BufferData(
-					BufferTarget.ElementArrayBuffer,
-					sizeof( uint ) * indices.Length,
-					indices,
-					BufferUsageHint.DynamicDraw
-				);
-			}
-
-			UseMaterial( job.Model.Material is null ? DefaultShader : job.Model.Material, ref job.Matrix );
-
-			if ( indices.Length > 0 )
-				GL.DrawElements(
-					wireFrame ? PrimitiveType.Lines : PrimitiveType.Triangles,
-					indices.Length,
-					DrawElementsType.UnsignedInt,
-					0
-				);
-			else
-				GL.DrawArrays(
-					wireFrame ? PrimitiveType.Lines : PrimitiveType.Triangles,
-					0,
-					vertices.Length
-				);
-		}
-		GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
-		GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
-		GL.BindVertexArray( 0 );
-		GL.UseProgram( 0 );
-	}
-
-	private void UseMaterial( Material material, ref Matrix4 model )
-	{
-		var handle = material.ProgramHandle;
-		GL.UseProgram( handle );
-
-		material.TrySetUniformMatrix4( "model", ref model );
-		material.TrySetUniformMatrix4( "view", ref cam.ViewMatrix );
-		material.TrySetUniformMatrix4( "projection", ref cam.ProjectionMatrix );
-
-		var aPos = GL.GetAttribLocation( handle, "aPos" );
-		GL.EnableVertexAttribArray( aPos );
-		GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 6 * sizeof( float ), 0 );
-
-		var aNormal = GL.GetAttribLocation( handle, "aNormal" );
-		if ( aNormal != -1 )
-		{
-			GL.EnableVertexAttribArray( aNormal );
-			GL.VertexAttribPointer(
-				aNormal,
-				3,
-				VertexAttribPointerType.Float,
-				false,
-				6 * sizeof( float ),
-				0
-			);
-		}
-
-		material.TrySetUniform3( "lightPos", lightPosition );
-		material.TrySetUniform1( "time", Time.Elapsed );
+		vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material,
+			ref mission.Matrix,
+			wireFrame,
+			new( "lightPos", lightPosition ),
+			new( "time", Time.Elapsed ) );
+		CheckGLError();
 	}
 
 	public static void CheckGLError()
@@ -157,7 +84,7 @@ public class ModelRenderer
 		if ( err != OpenTK.Graphics.OpenGL4.ErrorCode.NoError )
 		{
 			// TODO: Getting InvalidValue here, but it doesn't break anything.
-			//Log.Info( err );
+			Log.Info( err );
 			//throw new Exception( err.ToString() );
 		}
 	}

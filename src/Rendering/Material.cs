@@ -60,6 +60,15 @@ public class Material
 		GL.DeleteShader( fragHandle );
 	}
 
+	public bool TryGetAttribLocation( string name, out int location )
+	{
+		location = GL.GetAttribLocation( ProgramHandle, name );
+		if ( location < 0 )
+			return false;
+
+		return true;
+	}
+
 	public bool TrySetUniformMatrix4( string name, ref Matrix4 matrix )
 	{
 		var location = GL.GetUniformLocation( ProgramHandle, name );
