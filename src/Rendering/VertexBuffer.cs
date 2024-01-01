@@ -117,16 +117,16 @@ public sealed class VertexBuffer
 			switch ( u.Value )
 			{
 				case float floatValue:
-					material.TrySetUniform1( u.Name, floatValue );
+					material.TrySetUniformFloat( u.Name, floatValue );
 					break;
 				case Vector2 vec2Value:
-					material.TrySetUniform2( u.Name, vec2Value );
+					material.TrySetUniformVector2( u.Name, vec2Value );
 					break;
 				case Vector3 vec3Value:
-					material.TrySetUniform3( u.Name, vec3Value );
+					material.TrySetUniformVector3( u.Name, vec3Value );
 					break;
 				case Color4 color4Value:
-					material.TrySetColor4( u.Name, color4Value );
+					material.TrySetUniformColor4( u.Name, color4Value );
 					break;
 				case Matrix4 mat4Value:
 					material.TrySetUniformMatrix4( u.Name, ref mat4Value );

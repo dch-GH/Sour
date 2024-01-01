@@ -79,7 +79,7 @@ public class Material
 		return true;
 	}
 
-	public bool TrySetUniform1( string name, float value )
+	public bool TrySetUniformFloat( string name, float value )
 	{
 		var location = GL.GetUniformLocation( ProgramHandle, name );
 		if ( location < 0 )
@@ -89,7 +89,7 @@ public class Material
 		return true;
 	}
 
-	public bool TrySetUniform2( string name, OpenTK.Mathematics.Vector2 vec2 )
+	public bool TrySetUniformVector2( string name, OpenTK.Mathematics.Vector2 vec2 )
 	{
 		var location = GL.GetUniformLocation( ProgramHandle, name );
 		if ( location < 0 )
@@ -99,7 +99,7 @@ public class Material
 		return true;
 	}
 
-	public bool TrySetUniform3( string name, OpenTK.Mathematics.Vector3 vector3 )
+	public bool TrySetUniformVector3( string name, OpenTK.Mathematics.Vector3 vector3 )
 	{
 		var location = GL.GetUniformLocation( ProgramHandle, name );
 		if ( location < 0 )
@@ -109,7 +109,7 @@ public class Material
 		return true;
 	}
 
-	public bool TrySetColor4( string name, Color4 color )
+	public bool TrySetUniformColor4( string name, Color4 color )
 	{
 		var location = GL.GetUniformLocation( ProgramHandle, name );
 		if ( location < 0 )
