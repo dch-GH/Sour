@@ -60,62 +60,76 @@ public class Material
 		GL.DeleteShader( fragHandle );
 	}
 
-	public bool TryGetAttribLocation( string name, out int location )
+	public bool TryGetUniformLocation( string name, out int uniformLocation )
 	{
-		location = GL.GetAttribLocation( ProgramHandle, name );
-		if ( location < 0 )
+		uniformLocation = GL.GetUniformLocation( ProgramHandle, name );
+		if ( uniformLocation < 0 )
 			return false;
 
 		return true;
 	}
 
-	public bool TrySetUniformMatrix4( string name, ref Matrix4 matrix )
+	public bool TryGetAttribLocation( string name, out int atribLocation )
 	{
-		var location = GL.GetUniformLocation( ProgramHandle, name );
-		if ( location < 0 )
+		atribLocation = GL.GetAttribLocation( ProgramHandle, name );
+		if ( atribLocation < 0 )
 			return false;
 
-		GL.UniformMatrix4( location, false, ref matrix );
 		return true;
 	}
 
 	public bool TrySetUniformFloat( string name, float value )
 	{
-		var location = GL.GetUniformLocation( ProgramHandle, name );
-		if ( location < 0 )
-			return false;
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.Uniform1( location, value );
+			return true;
+		}
 
-		GL.Uniform1( location, value );
-		return true;
+		return false;
 	}
 
 	public bool TrySetUniformVector2( string name, OpenTK.Mathematics.Vector2 vec2 )
 	{
-		var location = GL.GetUniformLocation( ProgramHandle, name );
-		if ( location < 0 )
-			return false;
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.Uniform2( location, vec2 );
+			return true;
+		}
 
-		GL.Uniform2( location, vec2 );
-		return true;
+		return false;
 	}
 
 	public bool TrySetUniformVector3( string name, OpenTK.Mathematics.Vector3 vector3 )
 	{
-		var location = GL.GetUniformLocation( ProgramHandle, name );
-		if ( location < 0 )
-			return false;
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.Uniform3( location, vector3 );
+			return true;
+		}
 
-		GL.Uniform3( location, vector3 );
-		return true;
+		return false;
 	}
 
 	public bool TrySetUniformColor4( string name, Color4 color )
 	{
-		var location = GL.GetUniformLocation( ProgramHandle, name );
-		if ( location < 0 )
-			return false;
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.Uniform4( location, color );
+			return true;
+		}
 
-		GL.Uniform4( location, color );
-		return true;
+		return false;
+	}
+
+	public bool TrySetUniformMatrix4( string name, ref Matrix4 matrix )
+	{
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.UniformMatrix4( location, false, ref matrix );
+			return true;
+		}
+
+		return false;
 	}
 }
