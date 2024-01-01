@@ -39,6 +39,7 @@ public class Camera
 			300.0f
 		);
 
-		DebugDraw.Line( Transform.Position - Vector3.UnitY * 2, Transform.Position + Transform.Forward * 200, Color.White );
+		//DebugDraw.Line( Transform.Position - Vector3.UnitY * 2, Transform.Position + Transform.Forward * 200, Color.White );
+		//DebugDraw.Line( Vector3.Zero, Vector3.One, Color.White );
 	}
 }

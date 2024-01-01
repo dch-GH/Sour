@@ -2,7 +2,7 @@
 
 namespace Sour;
 
-public class Shader
+public struct Shader
 {
 	public ShaderType ShaderType;
 	public int Handle;

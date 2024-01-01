@@ -1,13 +1,9 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Drawing;
-
-namespace Sour;
+﻿namespace Sour;
 
 public class Model
 {
 	public Transform Transform = new();
-	public ShaderProgram? Shader;
+	public Material? Material;
 	public Assimp.Vector3D[] Vertices;
 	public uint[] Indices;
 	public Assimp.Vector3D[] Normals;
@@ -44,20 +40,20 @@ public class Model
 		Vertices = verts.ToArray();
 		Indices = indices.ToArray();
 
-		vtxShaderPath ??= ShaderProgram.DefaultVertexShaderPath;
-		fragShaderPath ??= ShaderProgram.DefaultFragmentShaderPath;
+		vtxShaderPath ??= Material.DefaultVertexShaderPath;
+		fragShaderPath ??= Material.DefaultFragmentShaderPath;
 
-		Shader = new ShaderProgram( vtxShaderPath, fragShaderPath );
+		Material = new Material( vtxShaderPath, fragShaderPath );
 	}
 
-	public void Render( Renderer r )
+	public void Render( ModelRenderer r )
 	{
 		var job = new RenderJob
 		{
 			Model = this,
 			Matrix = Transform.Matrix
 		};
-		r.PushJob( job );
+		r.PushModel( job );
 
 		var index = 0;
 		foreach ( var v in Vertices )
@@ -69,13 +65,8 @@ public class Model
 			var normal = Normals[index];
 			var n = new Vector3( normal.X, normal.Y, normal.Z );
 
-			DebugDraw.Line( x, x + n * 2, Color.Wheat );
+			//DebugDraw.Line( x, x + n * 2, Color4.Blue);
 			index += 1;
 		}
-	}
-
-	public void ReloadShaders()
-	{
-		Shader?.Reload();
 	}
 }

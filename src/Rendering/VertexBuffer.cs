@@ -2,6 +2,18 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Sour;
 
+public struct ShaderUniformVariable
+{
+	public string Name;
+	public object Value;
+
+	public ShaderUniformVariable( string name, object value )
+	{
+		Name = name;
+		Value = value;
+	}
+}
+
 public sealed class VertexBuffer
 {
 	public int VAO { get; private set; }
@@ -17,10 +29,9 @@ public sealed class VertexBuffer
 
 		VBO = GL.GenBuffer();
 		EBO = GL.GenBuffer();
-
 	}
 
-	public void Draw( Assimp.Vector3D[] vertices, uint[]? indices, ShaderProgram shader, ref Matrix4 model )
+	public void Draw( Assimp.Vector3D[] vertices, uint[]? indices, Material shader, ref Matrix4 model, params ShaderUniformVariable[] uniforms )
 	{
 		GL.BindVertexArray( VAO );
 		{
@@ -43,8 +54,7 @@ public sealed class VertexBuffer
 				);
 			}
 
-			// var shaderHandle = job.Model.Shader is null ? DefaultShader.ProgramHandle : job.Model.Shader.ProgramHandle;
-			UseShader( shader, ref model );
+			BindMaterial( shader, ref model, uniforms );
 
 			if ( indices is not null )
 				GL.DrawElements(
@@ -66,17 +76,42 @@ public sealed class VertexBuffer
 		GL.UseProgram( 0 );
 	}
 
-	private void UseShader( ShaderProgram shader, ref Matrix4 model )
+	private void BindMaterial( Material material, ref Matrix4 model, params ShaderUniformVariable[] uniforms )
 	{
-		var handle = shader.ProgramHandle;
+		var handle = material.ProgramHandle;
 		GL.UseProgram( handle );
 
-		shader.SetUniformMatrix4( "model", ref model );
-		shader.SetUniformMatrix4( "view", ref Camera.Main.ViewMatrix );
-		shader.SetUniformMatrix4( "projection", ref Camera.Main.ProjectionMatrix );
+		material.TrySetUniformMatrix4( "model", ref model );
+		material.TrySetUniformMatrix4( "view", ref Camera.Main.ViewMatrix );
+		material.TrySetUniformMatrix4( "projection", ref Camera.Main.ProjectionMatrix );
 
 		var aPos = GL.GetAttribLocation( handle, "aPos" );
 		GL.EnableVertexAttribArray( aPos );
 		GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
+
+		if ( uniforms.Length <= 0 )
+			return;
+
+		foreach ( var u in uniforms )
+		{
+			switch ( u.Value )
+			{
+				case float floatValue:
+					material.TrySetUniform1( u.Name, floatValue );
+					break;
+				case Vector2 vec2Value:
+					material.TrySetUniform2( u.Name, vec2Value );
+					break;
+				case Vector3 vec3Value:
+					material.TrySetUniform3( u.Name, vec3Value );
+					break;
+				case Color4 color4Value:
+					material.TrySetColor4( u.Name, color4Value );
+					break;
+				case Matrix4 mat4Value:
+					material.TrySetUniformMatrix4( u.Name, ref mat4Value );
+					break;
+			}
+		}
 	}
 }

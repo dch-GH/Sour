@@ -1,50 +1,60 @@
-﻿using System.Drawing;
-using OpenTK.Platform.Windows;
-using OpenTK.Windowing.Common;
+﻿using OpenTK.Windowing.Common;
 
 namespace Sour;
 
 public static class DebugDraw
 {
-	private struct DebugLineJob
+	private struct DebugDrawMission
 	{
-		public Vector3 Start;
-		public Vector3 End;
-		public Color Color;
-		public float Duration;
+		public Assimp.Vector3D[] Vertices;
+		public Color4 Color;
+		public float? Duration;
 	}
 
-	static Queue<DebugLineJob> lines;
+	static Queue<DebugDrawMission> missions;
 
 	static VertexBuffer vb;
-	static ShaderProgram DebugDrawShader;
+	static Material DebugDrawShader;
 
 	public static void Init()
 	{
-		lines = new();
+		missions = new();
 		vb = new();
 		DebugDrawShader = new( "Resources/Shaders/DebugDraw/debugdraw.vert", "Resources/Shaders/DebugDraw/debugdraw.frag" );
 	}
 
 	public static void Update( FrameEventArgs args )
 	{
-		while ( lines.TryDequeue( out var line ) )
+		while ( missions.TryDequeue( out var mission ) )
 		{
-			var start = line.Start;
-			var end = line.End;
-
 			var matrix = Matrix4.CreateTranslation( Vector3.Zero ) * Matrix4.CreateFromQuaternion( Quaternion.Identity );
-			var verts = new Assimp.Vector3D[2] { new Assimp.Vector3D( start.X, start.Y, start.Z ), new Assimp.Vector3D( end.X, end.Y, end.Z ) };
-			vb.Draw( verts, null, DebugDrawShader, ref matrix );
+			vb.Draw( mission.Vertices, null, DebugDrawShader, ref matrix,
+				new( "time", Time.Elapsed ),
+				new( "color", mission.Color ),
+				new( "dashSize", 10f ),
+				new( "gapSize", 10f ),
+				new( "resolution", Game.ScreenSize ) );
+
+			if ( mission.Duration.HasValue )
+			{
+				mission.Duration -= Time.Delta;
+				if ( mission.Duration > 0.0f )
+				{
+					missions.Enqueue( mission );
+					return;
+				}
+			}
 		}
 	}
 
-	public static void Line( Vector3 start, Vector3 end, Color color, float duration = 0 )
+	public static void Line( Vector3 start, Vector3 end, Color4 color, float duration = 0 )
 	{
-		lines.Enqueue( new DebugLineJob
+		var verts = new Assimp.Vector3D[2] { new Assimp.Vector3D( start.X, start.Y, start.Z ), new Assimp.Vector3D( end.X, end.Y, end.Z ) };
+		missions.Enqueue( new DebugDrawMission
 		{
-			Start = start,
-			End = end,
+			Vertices = verts,
+			Color = color,
+			Duration = duration > 0 ? duration : null
 		} );
 	}
 }

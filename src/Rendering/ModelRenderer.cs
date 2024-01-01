@@ -10,9 +10,9 @@ public struct RenderJob
 	public Matrix4 Matrix;
 }
 
-public class Renderer
+public class ModelRenderer
 {
-	public static ShaderProgram DefaultShader;
+	public static Material DefaultShader;
 	GameWindow window;
 
 	int VAO;
@@ -24,9 +24,8 @@ public class Renderer
 	Queue<RenderJob> renderJobs;
 
 	Vector3 lightPosition = new Vector3( -2, -16, 2 );
-	public bool ShadersNeedReloading = false;
 
-	public Renderer( Game window, Camera cam )
+	public ModelRenderer( Game window, Camera cam )
 	{
 		this.window = window;
 		this.cam = cam;
@@ -38,12 +37,10 @@ public class Renderer
 		VBO = GL.GenBuffer();
 		EBO = GL.GenBuffer();
 
-		DefaultShader = new ShaderProgram(
-			ShaderProgram.DefaultVertexShaderPath,
-			ShaderProgram.DefaultFragmentShaderPath
+		DefaultShader = new Material(
+			Material.DefaultVertexShaderPath,
+			Material.DefaultFragmentShaderPath
 		);
-
-		ShaderProgram.OnFileChanged += () => { ShadersNeedReloading = true; };
 	}
 
 	public void Render( FrameEventArgs args )
@@ -52,17 +49,6 @@ public class Renderer
 		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		if ( renderJobs.Count <= 0 )
 			return;
-
-		if ( ShadersNeedReloading )
-		{
-			Log.Info( "Reloading shaders..." );
-			while ( renderJobs.TryDequeue( out var currentJob ) )
-			{
-				currentJob.Model.ReloadShaders();
-			}
-			ShadersNeedReloading = false;
-			return;
-		}
 
 		while ( renderJobs.TryDequeue( out var currentJob ) )
 		{
@@ -76,9 +62,11 @@ public class Renderer
 
 		if ( keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
+
+		lightPosition = cam.Transform.Position + Vector3.UnitY * 2;
 	}
 
-	public void PushJob( RenderJob job )
+	public void PushModel( RenderJob job )
 	{
 		renderJobs.Enqueue( job );
 	}
@@ -110,7 +98,7 @@ public class Renderer
 				);
 			}
 
-			UseShader( job.Model.Shader is null ? DefaultShader : job.Model.Shader, ref job.Matrix );
+			UseMaterial( job.Model.Material is null ? DefaultShader : job.Model.Material, ref job.Matrix );
 
 			if ( indices.Length > 0 )
 				GL.DrawElements(
@@ -132,34 +120,35 @@ public class Renderer
 		GL.UseProgram( 0 );
 	}
 
-	private void UseShader( ShaderProgram shader, ref Matrix4 model )
+	private void UseMaterial( Material material, ref Matrix4 model )
 	{
-		var handle = shader.ProgramHandle;
+		var handle = material.ProgramHandle;
 		GL.UseProgram( handle );
 
-		shader.SetUniformMatrix4( "model", ref model );
-		shader.SetUniformMatrix4( "view", ref cam.ViewMatrix );
-		shader.SetUniformMatrix4( "projection", ref cam.ProjectionMatrix );
+		material.TrySetUniformMatrix4( "model", ref model );
+		material.TrySetUniformMatrix4( "view", ref cam.ViewMatrix );
+		material.TrySetUniformMatrix4( "projection", ref cam.ProjectionMatrix );
 
 		var aPos = GL.GetAttribLocation( handle, "aPos" );
 		GL.EnableVertexAttribArray( aPos );
 		GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 6 * sizeof( float ), 0 );
 
 		var aNormal = GL.GetAttribLocation( handle, "aNormal" );
-		GL.EnableVertexAttribArray( aNormal );
-		GL.VertexAttribPointer(
-			aNormal,
-			3,
-			VertexAttribPointerType.Float,
-			false,
-			6 * sizeof( float ),
-			0
-		);
+		if ( aNormal != -1 )
+		{
+			GL.EnableVertexAttribArray( aNormal );
+			GL.VertexAttribPointer(
+				aNormal,
+				3,
+				VertexAttribPointerType.Float,
+				false,
+				6 * sizeof( float ),
+				0
+			);
+		}
 
-		lightPosition = cam.Transform.Position + Vector3.UnitY * 2;
-		var lightPosUniform = GL.GetUniformLocation( handle, "lightPos" );
-		if ( lightPosUniform != -1 )
-			GL.Uniform3( lightPosUniform, lightPosition );
+		material.TrySetUniform3( "lightPos", lightPosition );
+		material.TrySetUniform1( "time", Time.Elapsed );
 	}
 
 	public static void CheckGLError()

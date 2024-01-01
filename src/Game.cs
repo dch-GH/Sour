@@ -1,34 +1,24 @@
-﻿using System.Globalization;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sour;
 
-public struct Face
-{
-	public Vector3[] Vertices;
-	public uint[] Indices;
-}
-
 public sealed class Game : GameWindow
 {
 	public static Vector2 ScreenSize;
 	public static KeyboardState Keyboard;
+	public static MaterialManager Materials;
 
-	List<Assimp.Vector3D> importedVerts;
-	List<uint> importedIndices;
-
-	Vector3 lookAngles;
 	Camera MainCamera;
-	float moveSpeed = 6;
-	float lookSpeed = 3;
+	ModelRenderer renderer;
 
-	Face upFace;
-	Renderer renderer;
 	Model monkey;
 	Model cone;
+
+	Vector3 lookAngles;
+	float moveSpeed = 6;
+	float lookSpeed = 3;
 
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
@@ -41,6 +31,10 @@ public sealed class Game : GameWindow
 		ScreenSize = ClientSize;
 		MainCamera = new Camera( new Vector3( 0, 0, -5 ), Quaternion.Identity );
 		Camera.Main = MainCamera;
+
+		Materials = new();
+		Materials.Init();
+
 		DebugDraw.Init();
 
 		renderer = new( this, MainCamera );
@@ -58,12 +52,23 @@ public sealed class Game : GameWindow
 	protected override void OnRenderFrame( FrameEventArgs args )
 	{
 		base.OnRenderFrame( args );
+
+		// Update materials first for a chance to hotload shaders.
+		if ( Materials.AnyShadersNeedHotload )
+		{
+			Materials.TryHotloadShaders();
+		}
+
 		MainCamera.Update( args );
 		monkey.Render( renderer );
 		cone.Render( renderer );
 		renderer.Render( args );
 		DebugDraw.Update( args );
+
 		SwapBuffers();
+
+		Time.Delta = (float)args.Time;
+		Time.Elapsed += Time.Delta;
 	}
 
 	protected override void OnResize( ResizeEventArgs e )
@@ -73,7 +78,6 @@ public sealed class Game : GameWindow
 		ScreenSize = ClientSize;
 	}
 
-	float accum = 0;
 	protected override void OnUpdateFrame( FrameEventArgs args )
 	{
 		base.OnUpdateFrame( args );
@@ -104,13 +108,16 @@ public sealed class Game : GameWindow
 			lookAngles += Vector3.UnitY * lookSpeed * dt;
 		if ( keyboard.IsKeyDown( Keys.Right ) )
 			lookAngles -= Vector3.UnitY * lookSpeed * dt;
-		accum += dt;
 
-		monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, accum );
-		cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, accum * 2 );
+		monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, Time.Elapsed );
+		cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, Time.Elapsed * 2 );
 
 		MainCamera.Transform.Position += wishDir;
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
 
+		if ( keyboard.IsKeyReleased( Keys.Space ) )
+		{
+			DebugDraw.Line( Vector3.Zero, Vector3.UnitX * 5, Color4.Yellow, 1 );
+		}
 	}
 }
