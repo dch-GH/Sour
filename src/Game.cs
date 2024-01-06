@@ -115,9 +115,5 @@ public sealed class Game : GameWindow
 		MainCamera.Transform.Position += wishDir;
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
 
-		if ( keyboard.IsKeyReleased( Keys.Space ) )
-		{
-			DebugDraw.Line( Vector3.Zero, Vector3.UnitX * 5, Color4.Yellow, 1 );
-		}
 	}
 }

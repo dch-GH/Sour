@@ -54,19 +54,5 @@ public class Model
 			Matrix = Transform.Matrix
 		};
 		r.PushModelMission( job );
-
-		var index = 0;
-		foreach ( var v in Vertices )
-		{
-			if ( index >= Normals.Length )
-				continue;
-
-			var x = new Vector3( v.X, v.Y, v.Z );
-			var normal = Normals[index];
-			var n = new Vector3( normal.X, normal.Y, normal.Z );
-
-			//DebugDraw.Line( x, x + n * 2, Color4.Blue);
-			index += 1;
-		}
 	}
 }

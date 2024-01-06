@@ -9,6 +9,7 @@ public static class DebugDraw
 		public Assimp.Vector3D[] Vertices;
 		public Color4 Color;
 		public float? Duration;
+		public Matrix4? Matrix;
 	}
 
 	static Queue<DebugDrawMission> missions;
@@ -27,7 +28,7 @@ public static class DebugDraw
 	{
 		while ( missions.TryDequeue( out var mission ) )
 		{
-			var matrix = Matrix4.CreateTranslation( Vector3.Zero ) * Matrix4.CreateFromQuaternion( Quaternion.Identity );
+			var matrix = mission.Matrix is null ? Matrix4.Identity : mission.Matrix.Value;
 			vb.Draw( mission.Vertices, null, DebugDrawShader, ref matrix,
 				wireFrame: true,
 				new( "time", Time.Elapsed ),
@@ -48,14 +49,15 @@ public static class DebugDraw
 		}
 	}
 
-	public static void Line( Vector3 start, Vector3 end, Color4 color, float duration = 0 )
+	public static void Line( Vector3 start, Vector3 end, Color4 color, float duration = 0, Matrix4? model = null )
 	{
 		var verts = new Assimp.Vector3D[2] { new Assimp.Vector3D( start.X, start.Y, start.Z ), new Assimp.Vector3D( end.X, end.Y, end.Z ) };
 		missions.Enqueue( new DebugDrawMission
 		{
 			Vertices = verts,
 			Color = color,
-			Duration = duration > 0 ? duration : null
+			Duration = duration > 0 ? duration : null,
+			Matrix = model
 		} );
 	}
 }

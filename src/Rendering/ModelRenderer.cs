@@ -14,10 +14,6 @@ public class ModelRenderer
 {
 	public static Material DefaultShader;
 
-	int VAO;
-	int VBO;
-	int EBO;
-
 	bool wireFrame = false;
 	Camera camera;
 
@@ -70,6 +66,7 @@ public class ModelRenderer
 		var model = mission.Model;
 
 		GL.Enable( EnableCap.CullFace );
+		GL.Enable( EnableCap.DepthTest );
 		vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material,
 			ref mission.Matrix,
 			wireFrame,

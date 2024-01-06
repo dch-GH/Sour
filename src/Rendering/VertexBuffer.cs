@@ -108,7 +108,6 @@ public sealed class VertexBuffer
 			GL.VertexAttribPointer( aPos, 3, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
 		}
 
-
 		if ( uniforms.Length <= 0 )
 			return;
 
