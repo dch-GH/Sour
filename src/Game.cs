@@ -42,6 +42,10 @@ public sealed class Game : GameWindow
 		// cone = new Model( "Resources/Models/Cone/cone.obj" );
 		cone = new Model( "Resources/Models/Cone/cone.obj", fragShaderPath: "Resources/Shaders/otherfrag.glsl" );
 		cone.Transform.Position += Vector3.UnitX * 3f;
+		cone.Transform.Rotation = Quaternion.Identity;
+
+		monkey.Transform.Position = Vector3.Zero;
+		monkey.Transform.Rotation = Quaternion.Identity;
 	}
 
 	public override void Run()
@@ -104,13 +108,13 @@ public sealed class Game : GameWindow
 
 		wishDir *= moveSpeed * dt;
 
-		if ( keyboard.IsKeyDown( Keys.Left ) )
-			lookAngles += Vector3.UnitY * lookSpeed * dt;
-		if ( keyboard.IsKeyDown( Keys.Right ) )
-			lookAngles -= Vector3.UnitY * lookSpeed * dt;
+		// if ( keyboard.IsKeyDown( Keys.Left ) )
+		// 	lookAngles += Vector3.UnitY * lookSpeed * dt;
+		// if ( keyboard.IsKeyDown( Keys.Right ) )
+		// 	lookAngles -= Vector3.UnitY * lookSpeed * dt;
 
-		monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, Time.Elapsed );
-		cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, Time.Elapsed * 2 );
+		//monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, Time.Elapsed );
+		//cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, Time.Elapsed * 2 );
 
 		MainCamera.Transform.Position += wishDir;
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );

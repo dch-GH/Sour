@@ -10,17 +10,18 @@ public class Camera
 
 	public Matrix4 ViewMatrix;
 	public Matrix4 ProjectionMatrix;
+	const float _orthoSize = 16;
 
 	public Camera( Vector3 position, Quaternion rotation, float fov = 90 )
 	{
 		Transform = new( position, rotation );
 		FieldOfView = fov;
 		ViewMatrix = Matrix4.LookAt( Transform.Position, Vector3.Zero, Vector3.UnitY );
-		ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
-			MathHelper.DegreesToRadians( FieldOfView ),
-			Game.ScreenSize.X / (float)Game.ScreenSize.Y,
+		ProjectionMatrix = Matrix4.CreateOrthographic(
+			_orthoSize,
+			_orthoSize,
 			0.1f,
-			300.0f
+			1000.0f
 		);
 	}
 
@@ -32,11 +33,11 @@ public class Camera
 			Vector3.UnitY
 		);
 
-		ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
-			MathHelper.DegreesToRadians( FieldOfView ),
-			Game.ScreenSize.X / (float)Game.ScreenSize.Y,
+		ProjectionMatrix = Matrix4.CreateOrthographic(
+			_orthoSize,
+			_orthoSize,
 			0.1f,
-			300.0f
+			1000.0f
 		);
 
 		//DebugDraw.Line( Transform.Position - Vector3.UnitY * 2, Transform.Position + Transform.Forward * 200, Color.White );

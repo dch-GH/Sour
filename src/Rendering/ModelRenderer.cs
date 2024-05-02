@@ -53,7 +53,7 @@ public class ModelRenderer
 		if ( keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
 
-		lightPosition = camera.Transform.Position + Vector3.UnitY * 2;
+		lightPosition = camera.Transform.Position;
 	}
 
 	public void PushModelMission( ModelDrawMission mission )
