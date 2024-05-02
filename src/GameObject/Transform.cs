@@ -14,5 +14,5 @@ public struct Transform
 	public Vector3 Forward => Rotation * Vector3.UnitZ;
 	public Vector3 Right => Rotation * Vector3.UnitX;
 	public Vector3 Up => Rotation * Vector3.UnitY;
-	public Matrix4 Matrix => Matrix4.CreateTranslation( Position ) * Matrix4.CreateFromQuaternion( Rotation );
+	public Matrix4 Matrix => Matrix4.CreateFromQuaternion( Rotation ) * Matrix4.CreateTranslation( Position );
 }

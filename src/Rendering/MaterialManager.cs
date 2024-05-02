@@ -6,7 +6,7 @@ public sealed class MaterialManager
 
 	public bool AnyShadersNeedHotload = false;
 
-	public void Init()
+	public MaterialManager()
 	{
 		materials = new();
 	}

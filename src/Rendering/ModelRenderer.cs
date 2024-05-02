@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Diagnostics;
+using System.Drawing;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -6,7 +8,7 @@ namespace Sour;
 
 public struct ModelDrawMission
 {
-	public Model Model;
+	public ModelComponent Model;
 	public Matrix4 Matrix;
 }
 
@@ -19,8 +21,6 @@ public class ModelRenderer
 
 	Queue<ModelDrawMission> modelMissions;
 	VertexBuffer vb;
-
-	Vector3 lightPosition = new Vector3( -2, -16, 2 );
 
 	public ModelRenderer( Game window, Camera cam )
 	{
@@ -35,8 +35,6 @@ public class ModelRenderer
 
 	public void Render( FrameEventArgs args )
 	{
-		GL.ClearColor( 0.05f, 0.25f, 0.3f, 1 );
-		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		if ( modelMissions.Count <= 0 )
 			return;
 
@@ -52,8 +50,6 @@ public class ModelRenderer
 
 		if ( keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
-
-		lightPosition = camera.Transform.Position + Vector3.UnitY * 2;
 	}
 
 	public void PushModelMission( ModelDrawMission mission )
@@ -63,15 +59,11 @@ public class ModelRenderer
 
 	private void DrawModel( ModelDrawMission mission )
 	{
-		var model = mission.Model;
-
 		GL.Enable( EnableCap.CullFace );
 		GL.Enable( EnableCap.DepthTest );
-		vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material,
-			ref mission.Matrix,
-			wireFrame,
-			new( "lightPos", lightPosition ),
-			new( "time", Time.Elapsed ) );
+		Debug.Assert( mission.Model.Material is not null );
+		// vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material, ref mission.Matrix, wireFrame, [new( "time", Time.Elapsed )] );
+		vb.DrawModel( mission.Model, ref mission.Matrix );
 		CheckGLError();
 	}
 
