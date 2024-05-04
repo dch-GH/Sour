@@ -68,15 +68,6 @@ public struct Screen
 		// Bind to the game FBO.
 		GL.BindFramebuffer( FramebufferTarget.Framebuffer, _gameFbo );
 		GL.Viewport( 0, 0, (int)ScreenSize.X, (int)ScreenSize.Y );
-
-		GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
-
-		// Clear the scene.
-		GL.ClearColor( 0.1f, 0f, 0.2f, 1f );
-		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
-
-		GL.Enable( EnableCap.CullFace );
-		GL.Enable( EnableCap.DepthTest );
 	}
 
 	public void Draw()

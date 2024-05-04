@@ -71,8 +71,20 @@ public sealed class Game : GameWindow
 		{
 			_screen.PreDraw();
 
+			GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
+
+			// Clear the scene.
+			GL.ClearColor( 0.1f, 0f, 0.2f, 1f );
+			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
+			GL.Enable( EnableCap.CullFace );
+			GL.Enable( EnableCap.DepthTest );
+
 			// Draw the scene.
 			ModelRenderer.Render( args );
+
+			GL.DrawBuffers( 1, [DrawBuffersEnum.ColorAttachment0] );
+			GL.Clear( ClearBufferMask.None );
+
 			DebugDraw.Render( args );
 
 			_screen.Draw();
