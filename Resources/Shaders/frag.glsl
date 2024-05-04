@@ -1,15 +1,14 @@
 #version 440 core
 
-layout(location = 4) out vec3 id_color;
+layout(location = 0) out vec4 out_Color;
+layout(location = 1) out vec4 out_ObjectId;
 
-// in uint id;
 in vec3 Normal;
 in vec3 FragPos;
-out vec4 FragColor;
 
 void main()
 {
-    // id_color = vec3(1,0,0);
     vec3 norm = normalize(Normal);
-    FragColor = vec4(norm, 1.0f);
+    out_ObjectId = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    out_Color = vec4(norm, 1.0f);
 } 

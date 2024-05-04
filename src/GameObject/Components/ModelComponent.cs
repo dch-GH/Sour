@@ -20,7 +20,7 @@ public class ModelComponent : Component
 		var ctx = new Assimp.AssimpContext();
 		var imported = ctx.ImportFile( path, Assimp.PostProcessSteps.Triangulate );
 
-		List<Assimp.Vector3D> verts = new();
+		List<Assimp.Vector3D> positions = new();
 		List<uint> indices = new();
 		var mesh = imported.Meshes[0];
 
@@ -29,9 +29,7 @@ public class ModelComponent : Component
 			Normals = normals.ToArray();
 
 		foreach ( var pos in mesh.Vertices )
-		{
-			verts.Add( pos );
-		}
+			positions.Add( pos );
 
 		foreach ( var i in mesh.GetUnsignedIndices() )
 			indices.Add( i );
@@ -44,10 +42,12 @@ public class ModelComponent : Component
 
 		Log.Info( mesh.VertexCount );
 
-		Positions = verts.ToArray();
+		Positions = positions.ToArray();
 		Indices = indices.ToArray();
 
 		Debug.Assert( Positions.Length == mesh.VertexCount );
+		Debug.Assert( mesh.VertexCount == UVs.Length );
+
 		var vertices = new List<Vertex>();
 		for ( var i = 0; i < mesh.VertexCount; i++ )
 		{
@@ -57,7 +57,9 @@ public class ModelComponent : Component
 				Normal = Normals[i],
 				UV = UVs[i]
 			} );
+
 		}
+
 
 		Vertices = vertices.ToArray();
 
