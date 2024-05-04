@@ -86,27 +86,27 @@ public sealed class VertexBuffer
 
 	public void DrawModel( ModelComponent model, ref Matrix4 matrix, bool wireFrame = false, params ShaderUniformVariable[] uniforms )
 	{
-		var imbadatprogramming = new List<Assimp.Vector3D>();
+		// TODO: I dunno I need to fix the vertices on ModelComponent.
+		var hackyVerts = new List<Assimp.Vector3D>();
 		foreach ( var x in model.Positions )
 		{
-			imbadatprogramming.Add( x );
+			hackyVerts.Add( x );
 		}
 
 		foreach ( var y in model.Normals )
 		{
-			imbadatprogramming.Add( y );
+			hackyVerts.Add( y );
 		}
 
-		var megafuck = imbadatprogramming.ToArray();
+		var hackyVertsArray = hackyVerts.ToArray();
 
 		GL.BindVertexArray( VAO );
 		{
-			GL.CheckFramebufferStatus( FramebufferTarget.Framebuffer );
 			GL.BindBuffer( BufferTarget.ArrayBuffer, VBO );
 			GL.BufferData(
 				BufferTarget.ArrayBuffer,
-				sizeof( float ) * 3 * megafuck.Length,
-				megafuck,
+				sizeof( float ) * 3 * hackyVertsArray.Length,
+				hackyVertsArray,
 				BufferUsageHint.DynamicDraw
 			);
 
@@ -122,9 +122,7 @@ public sealed class VertexBuffer
 			}
 
 			if ( model.Material is null )
-			{
-				throw new Exception( "Material is null you fucked up" );
-			}
+				throw new Exception( "Material is null you messed up!" );
 
 			BindMaterial( model.Material, ref matrix, uniforms );
 
@@ -148,13 +146,14 @@ public sealed class VertexBuffer
 		GL.UseProgram( 0 );
 	}
 
-	public void DrawScreenQuad( Screen screen, Texture test )
+	public void DrawScreenQuad( Screen screen )
 	{
 		var vertices = screen.Vertices;
 		var material = screen.Material;
 
 		GL.BindVertexArray( VAO );
-		GL.BindTexture( TextureTarget.Texture2D, test.Handle );
+
+		GL.BindTexture( TextureTarget.Texture2D, screen.ColorTexture.Handle );
 		{
 			GL.BindBuffer( BufferTarget.ArrayBuffer, VBO );
 			GL.BufferData(
@@ -178,8 +177,6 @@ public sealed class VertexBuffer
 
 			GL.EnableVertexAttribArray( aTexCoords );
 			GL.VertexAttribPointer( aTexCoords, 2, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
-
-			// material.TrySetUniformSampler2D( "screenTexture", test );
 
 			GL.Disable( EnableCap.CullFace );
 			GL.Disable( EnableCap.DepthTest );
