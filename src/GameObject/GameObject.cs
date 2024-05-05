@@ -3,7 +3,7 @@ namespace Sour;
 public sealed class GameObject : IDisposable
 {
 	// Unique Id.
-	public uint Id => Id;
+	public uint Id => _id;
 	public static List<GameObject> All => _all;
 	public Transform Transform;
 	public Box3 Bounds;

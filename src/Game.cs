@@ -168,4 +168,13 @@ public sealed class Game : GameWindow
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
 
 	}
+
+	public static int RgbToHex( int rgbColor )
+	{
+		int red = (rgbColor >> 16) & 0xFF;
+		int green = (rgbColor >> 8) & 0xFF;
+		int blue = rgbColor & 0xFF;
+
+		return (red << 16) | (green << 8) | blue;
+	}
 }
