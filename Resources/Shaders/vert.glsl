@@ -7,12 +7,12 @@ layout (location = 2) in vec3 aTexCoords;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform float aObjectId;
+uniform vec4 aObjectId;
 
 out vec3 Normal;
 out vec3 FragPos;
 out vec3 UV;
-out float ObjectId;
+out vec4 ObjectId;
 
 void main()
 {

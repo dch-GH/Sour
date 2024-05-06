@@ -61,7 +61,7 @@ public class ModelRenderer
 	{
 		Debug.Assert( mission.Model.Material is not null );
 		// vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material, ref mission.Matrix, wireFrame, [new( "time", Time.Elapsed )] );
-		vb.DrawModel( mission.Model, ref mission.Matrix, wireFrame, [new ShaderUniformVariable( "aObjectId", mission.Model.GameObject.Id )] );
+		vb.DrawModel( mission.Model, ref mission.Matrix, wireFrame, [new ShaderUniformVariable( "aObjectId", mission.Model.GameObject.ColorId )] );
 		CheckGLError();
 	}
 

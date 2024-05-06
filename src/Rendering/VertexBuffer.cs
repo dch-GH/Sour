@@ -170,13 +170,13 @@ public sealed class VertexBuffer
 				throw new Exception( $"Expect a vertex position attribute in material: {material}" );
 
 			GL.EnableVertexAttribArray( aPos );
-			GL.VertexAttribPointer( aPos, 2, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
+			GL.VertexAttribPointer( aPos, 2, VertexAttribPointerType.Float, false, 4 * sizeof( float ), 0 );
 
 			if ( !material.TryGetAttribLocation( "aTexCoords", out var aTexCoords ) )
 				throw new Exception( $"Expect a tex coord attribute in material: {material}" );
 
 			GL.EnableVertexAttribArray( aTexCoords );
-			GL.VertexAttribPointer( aTexCoords, 2, VertexAttribPointerType.Float, false, 3 * sizeof( float ), 0 );
+			GL.VertexAttribPointer( aTexCoords, 2, VertexAttribPointerType.Float, false, 4 * sizeof( float ), 2 * sizeof( float ) );
 
 			GL.Disable( EnableCap.CullFace );
 			GL.Disable( EnableCap.DepthTest );

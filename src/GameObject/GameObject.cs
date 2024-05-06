@@ -15,10 +15,29 @@ public sealed class GameObject : IDisposable
 	private static List<GameObject> _all = new();
 	private List<Component> _components;
 
+	// TODO: hack
+	public Color4 ColorId => _colorId;
+	private Color4 _colorId;
+
 	private GameObject()
 	{
-		_id = _generation;
-		_generation += 1;
+		DateTime epochStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
+		TimeSpan span = DateTime.UtcNow - epochStart;
+
+		_id = (uint)span.TotalMilliseconds;
+
+		byte red = (byte)(_id >> 16 & 0xFF);
+		byte green = (byte)(_id >> 8 & 0xFF);
+		byte blue = (byte)(_id & 0xFF);
+
+		Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
+
+		var rf = Game.ByteToFloat( red );
+		var gf = Game.ByteToFloat( green );
+		var bf = Game.ByteToFloat( blue );
+		Log.Info( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
+
+		_colorId = new Color4( rf, gf, bf, 1.0f );
 
 		Transform = new();
 		_components = new();

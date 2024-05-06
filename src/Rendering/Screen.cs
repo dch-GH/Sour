@@ -12,14 +12,32 @@ public struct Screen
 	private int _rbo;
 	private Texture _colorTexture;
 	private Texture _objectIdTexture;
-	public static float[] QuadPositions = [-1f, 1f, 0f, -1f, -1f, 0f, 1f, -1f, 0f, -1f, 1f, 0f, 1f, -1f, 0f, 1f, 1f, 0f];
-	public static float[] QuadUVs = [
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
+	// public static float[] QuadPositions = [
+	// 	-1f, 1f, 0f,
+	// 	-1f, -1f, 0f,
+	// 	1f, -1f, 0f,
+
+	// 	-1f, 1f, 0f,
+	// 	1f, -1f, 0f,
+	// 	1f, 1f, 0f];
+
+	// public static float[] QuadUVs = [
+	// 	0.0f, 1.0f, 0.0f,
+	// 	0.0f, 0.0f, 0.0f,
+	// 	1.0f, 0.0f, 0.0f,
+	// 	0.0f, 1.0f, 0.0f,
+	// 	1.0f, 0.0f, 0.0f,
+	// 	1.0f, 1.0f, 0.0f,
+	// ];
+
+	public static float[] QuadPositions = [
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
 	];
 
 	public float[] Vertices;
@@ -34,8 +52,8 @@ public struct Screen
 		foreach ( var p in QuadPositions )
 			vertices.Add( p );
 
-		foreach ( var uv in QuadUVs )
-			vertices.Add( uv );
+		// foreach ( var uv in QuadUVs )
+		// 	vertices.Add( uv );
 
 		Vertices = vertices.ToArray();
 
@@ -81,5 +99,13 @@ public struct Screen
 		GL.Clear( ClearBufferMask.ColorBufferBit );
 
 		_vb.DrawScreenQuad( this );
+	}
+
+	public void Resize( int width, int height )
+	{
+		ScreenSize = new Vector2( width, height );
+		Log.Info( ScreenSize );
+		_colorTexture.Resize( width, height );
+		_objectIdTexture.Resize( width, height );
 	}
 }

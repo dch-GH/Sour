@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Drawing;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -19,7 +20,7 @@ public sealed class Game : GameWindow
 	Vector3 lookAngles;
 	float moveSpeed = 6;
 	float lookSpeed = 3;
-
+	private Color4 _selectedGameObjectId;
 
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
@@ -57,6 +58,7 @@ public sealed class Game : GameWindow
 	protected override void OnRenderFrame( FrameEventArgs args )
 	{
 		base.OnRenderFrame( args );
+		var mouse = MouseState;
 
 		// Update materials first for a chance to hotload shaders.
 		if ( Materials.AnyShadersNeedHotload )
@@ -82,6 +84,28 @@ public sealed class Game : GameWindow
 			// Draw the scene.
 			ModelRenderer.Render( args );
 
+			// TODO:
+			if ( mouse.IsButtonReleased( MouseButton.Left ) )
+			{
+				var mouseX = (int)Mouse.Position.X;
+				var mouseY = (int)Mouse.Position.Y;
+				GL.ReadBuffer( ReadBufferMode.ColorAttachment1 );
+
+				int pixelData = 0;
+				GL.ReadPixels( mouseX, mouseY, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
+
+				Log.Info( $"pixelData: {pixelData}" );
+				// byte red = Color.FromArgb( pixelData ).R;
+				// byte green = Color.FromArgb( pixelData ).G;
+				// byte blue = Color.FromArgb( pixelData ).B;
+
+				float red = (byte)(pixelData >> 16 & 0xFF) / 255f;
+				float green = (byte)(pixelData >> 8 & 0xFF) / 255f;
+				float blue = (byte)(pixelData & 0xFF) / 255f;
+
+				Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
+			}
+
 			GL.DrawBuffers( 1, [DrawBuffersEnum.ColorAttachment0] );
 			GL.Clear( ClearBufferMask.None );
 
@@ -101,6 +125,7 @@ public sealed class Game : GameWindow
 		base.OnResize( e );
 		GL.Viewport( 0, 0, e.Width, e.Height );
 		ScreenSize = ClientSize;
+		_screen.Resize( e.Width, e.Height );
 	}
 
 	protected override void OnUpdateFrame( FrameEventArgs args )
@@ -112,29 +137,6 @@ public sealed class Game : GameWindow
 
 		Keyboard = keyboard;
 		Mouse = MouseState;
-
-		// TODO:
-		if ( mouse.IsButtonReleased( MouseButton.Left ) )
-		{
-			// var pos = MainCamera.Transform.Position;
-			// var fwd = MainCamera.Transform.Forward;
-
-			// var ray = new Ray( pos, pos + fwd * 10000 );
-
-			// foreach ( var go in GameObject.All )
-			// {
-			// 	var box3 = go.Bounds.Translated( go.Transform.Position ).Scaled( Vector3.One * 4, go.Transform.Position );
-			// 	Log.Info( go.Bounds );
-			// 	Log.Info( mouse.Position );
-			// 	var box2d = go.Bounds.ToBox2();
-			// 	Log.Info( box2d );
-			// 	if ( box2d.ContainsExclusive( mouse.Position ) )
-			// 	{
-			// 		Log.Info( "yes!" );
-			// 	}
-			// }
-		}
-
 
 		GameObject.UpdateAll();
 		ModelRenderer.Update( args, keyboard );
@@ -176,5 +178,15 @@ public sealed class Game : GameWindow
 		int blue = rgbColor & 0xFF;
 
 		return (red << 16) | (green << 8) | blue;
+	}
+
+	public static float ByteToFloat( byte byteValue )
+	{
+		return (float)byteValue / 255.0f;
+	}
+
+	public static byte FloatToByte( float floatValue )
+	{
+		return (byte)Math.Round( floatValue * 255.0f );
 	}
 }
