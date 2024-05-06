@@ -4,20 +4,17 @@ public sealed class GameObject : IDisposable
 {
 	// Unique Id.
 	public uint Id => _id;
+	private readonly uint _id;
 	public static List<GameObject> All => _all;
 	public Transform Transform;
 	public Box3 Bounds;
-	private readonly uint _id;
-
-	// How many times a GameObject has been created.
-	// Use this for assigning a unique ID to every GameObject.
-	private static uint _generation;
-	private static List<GameObject> _all = new();
-	private List<Component> _components;
-
-	// TODO: hack
 	public Color4 ColorId => _colorId;
 	private Color4 _colorId;
+	public bool IsSelected => _selected;
+	private bool _selected = false;
+
+	private static List<GameObject> _all = new();
+	private List<Component> _components;
 
 	private GameObject()
 	{
@@ -43,7 +40,7 @@ public sealed class GameObject : IDisposable
 		_components = new();
 
 		// TODO:
-		Bounds = new Box3( Vector3.One * -1, Vector3.One * 1 );
+		Bounds = new Box3( Vector3.One * -1.2f, Vector3.One * 1.2f );
 		_all.Add( this );
 	}
 
@@ -118,6 +115,22 @@ public sealed class GameObject : IDisposable
 	public static GameObject Spawn()
 	{
 		return Spawn( Vector3.Zero, Quaternion.Identity );
+	}
+
+	public static GameObject? GetFromId( Color255 color )
+	{
+		var col4 = color.ToColor4();
+		// foreach ( var go in All )
+		// {
+		// 	Log.Info( $"Looking for {col4}" );
+		// 	Log.Info( $"This GameObject has {go.ColorId}" );
+		// }
+		return All.FirstOrDefault( x => x.ColorId == col4 );
+	}
+
+	public void ToggleSelected()
+	{
+		_selected = !_selected;
 	}
 
 	public void Dispose()

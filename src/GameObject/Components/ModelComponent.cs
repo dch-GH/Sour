@@ -60,7 +60,6 @@ public class ModelComponent : Component
 
 		}
 
-
 		Vertices = vertices.ToArray();
 
 		// TODO: Material.Default (just the basic material to fallback to instead of making one here every time)
@@ -84,6 +83,7 @@ public class ModelComponent : Component
 		};
 		r.PushModelMission( job );
 
-		DebugDraw.Box3( GameObject.Bounds, Color4.Yellow, model: GameObject.Transform.Matrix );
+		if ( GameObject.IsSelected )
+			DebugDraw.Box3( GameObject.Bounds, Color4.Yellow, model: GameObject.Transform.Matrix );
 	}
 }

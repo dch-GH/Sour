@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -20,7 +19,6 @@ public sealed class Game : GameWindow
 	Vector3 lookAngles;
 	float moveSpeed = 6;
 	float lookSpeed = 3;
-	private Color4 _selectedGameObjectId;
 
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
@@ -76,34 +74,34 @@ public sealed class Game : GameWindow
 			GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
 
 			// Clear the scene.
-			GL.ClearColor( 0.1f, 0f, 0.2f, 1f );
+			GL.ClearColor( 0.06f, 0.02f, 0.03f, 1.0f );
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
+
 			GL.Enable( EnableCap.CullFace );
 			GL.Enable( EnableCap.DepthTest );
 
 			// Draw the scene.
 			ModelRenderer.Render( args );
 
-			// TODO:
 			if ( mouse.IsButtonReleased( MouseButton.Left ) )
 			{
 				var mouseX = (int)Mouse.Position.X;
 				var mouseY = (int)Mouse.Position.Y;
 				GL.ReadBuffer( ReadBufferMode.ColorAttachment1 );
 
-				int pixelData = 0;
+				Color255 pixelData = new();
 				GL.ReadPixels( mouseX, mouseY, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
 
-				Log.Info( $"pixelData: {pixelData}" );
-				// byte red = Color.FromArgb( pixelData ).R;
-				// byte green = Color.FromArgb( pixelData ).G;
-				// byte blue = Color.FromArgb( pixelData ).B;
+				Log.Info( $"Pixel color (bytes): {pixelData}" );
+				var red = pixelData.R;
+				var green = pixelData.G;
+				var blue = pixelData.B;
 
-				float red = (byte)(pixelData >> 16 & 0xFF) / 255f;
-				float green = (byte)(pixelData >> 8 & 0xFF) / 255f;
-				float blue = (byte)(pixelData & 0xFF) / 255f;
+				Log.Info( $"Pixel color (floats): R: {red / 255f}, G: {green / 255f}, B: {blue / 255f}" );
 
-				Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
+				var selected = GameObject.GetFromId( pixelData );
+				selected?.ToggleSelected();
+				Log.Info( selected );
 			}
 
 			GL.DrawBuffers( 1, [DrawBuffersEnum.ColorAttachment0] );
@@ -124,14 +122,8 @@ public sealed class Game : GameWindow
 	{
 		base.OnResize( e );
 		ScreenSize = ClientSize;
-		GL.Viewport( 0, 0, e.Width, e.Height );
 		_screen.Resize( e.Width, e.Height );
 	}
-
-	// protected override void OnFramebufferResize( FramebufferResizeEventArgs e )
-	// {
-	// 	base.OnFramebufferResize( e );
-	// }
 
 	protected override void OnUpdateFrame( FrameEventArgs args )
 	{
@@ -167,9 +159,6 @@ public sealed class Game : GameWindow
 			lookAngles += Vector3.UnitY * lookSpeed * dt;
 		if ( keyboard.IsKeyDown( Keys.Right ) )
 			lookAngles -= Vector3.UnitY * lookSpeed * dt;
-
-		// monkey.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, Time.Elapsed );
-		// cone.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitX, Time.Elapsed * 2 );
 
 		MainCamera.Transform.Position += wishDir;
 		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
