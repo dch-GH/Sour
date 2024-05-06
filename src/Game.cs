@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Data.Common;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -7,13 +8,16 @@ namespace Sour;
 public sealed class Game : GameWindow
 {
 	public static Vector2i ScreenSize;
-	private Screen _screen;
 	public static KeyboardState Keyboard;
 	public static MouseState Mouse;
 	public static MaterialManager Materials;
 	public static ModelRenderer ModelRenderer;
+	public static UpdateEventEmitter UpdateEmitter;
+	public static RenderEventEmitter RenderEmitter;
 
-	Camera MainCamera;
+	private Camera _mainCamera;
+	private Screen _screen;
+	private Editor _editor;
 
 	Vector3 lookAngles;
 	float moveSpeed = 6;
@@ -21,6 +25,13 @@ public sealed class Game : GameWindow
 
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
+		UpdateEmitter = new();
+		RenderEmitter = new();
+
+		_mainCamera = new Camera( Vector3.Zero, Quaternion.Identity );
+		Camera.Main = _mainCamera;
+
+		_editor = new();
 	}
 
 	protected override void OnLoad()
@@ -31,10 +42,9 @@ public sealed class Game : GameWindow
 
 		Materials = new();
 
-		MainCamera = new Camera( new Vector3( 0, 0, -5 ), Quaternion.Identity );
-		Camera.Main = MainCamera;
+		_mainCamera.Transform.Position = new Vector3( 0, 0, -5 );
 		DebugDraw.Init();
-		ModelRenderer = new( this, MainCamera );
+		ModelRenderer = new( this, _mainCamera );
 
 		var screenMaterial = new Material( "Resources/Shaders/Screen/vert_screen.glsl", "Resources/Shaders/Screen/frag_screen.glsl" );
 		_screen = new( ScreenSize, screenMaterial, new VertexBuffer() );
@@ -56,22 +66,26 @@ public sealed class Game : GameWindow
 	protected override void OnRenderFrame( FrameEventArgs args )
 	{
 		base.OnRenderFrame( args );
-		var mouse = MouseState;
+
 
 		// Update materials first for a chance to hotload shaders.
 		if ( Materials.AnyShadersNeedHotload )
-		{
 			Materials.TryHotloadShaders();
-		}
 
-		MainCamera.Update( args );
+		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PreRender, args );
+		RenderEmitter.OnRenderStage?.Invoke( RenderStage.PreEverything, args );
 
 		// GameObjects and Components submit drawtasks here, which are drawn later in this loop.
 		GameObject.RenderAll();
 		{
 			_screen.PreDraw();
 
-			GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
+			if ( _editor.RequestObjectIdRender )
+			{
+				GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
+			}
+			else
+				GL.DrawBuffer( DrawBufferMode.ColorAttachment0 );
 
 			// Clear the scene.
 			GL.ClearColor( 0.06f, 0.02f, 0.03f, 1.0f );
@@ -81,33 +95,14 @@ public sealed class Game : GameWindow
 			GL.Enable( EnableCap.DepthTest );
 
 			// Draw the scene.
+			RenderEmitter.OnRenderStage?.Invoke( RenderStage.PreSceneRender, args );
 			ModelRenderer.Render( args );
-
-			if ( mouse.IsButtonReleased( MouseButton.Left ) )
-			{
-				var mouseX = (int)Mouse.Position.X;
-				var mouseY = (int)Mouse.Position.Y;
-				GL.ReadBuffer( ReadBufferMode.ColorAttachment1 );
-
-				Color255 pixelData = new();
-				GL.ReadPixels( mouseX, mouseY, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
-
-				Log.Info( $"Pixel color (bytes): {pixelData}" );
-				var red = pixelData.R;
-				var green = pixelData.G;
-				var blue = pixelData.B;
-
-				Log.Info( $"Pixel color (floats): R: {red / 255f}, G: {green / 255f}, B: {blue / 255f}" );
-
-				var selected = GameObject.GetFromId( pixelData );
-				selected?.ToggleSelected();
-				if ( selected is not null )
-					Log.Info( selected );
-			}
+			RenderEmitter.OnRenderStage?.Invoke( RenderStage.PostSceneRender, args );
 
 			GL.DrawBuffers( 1, [DrawBuffersEnum.ColorAttachment0] );
 			GL.Clear( ClearBufferMask.None );
 
+			RenderEmitter.OnRenderStage?.Invoke( RenderStage.DebugDraw, args );
 			DebugDraw.Render( args );
 
 			_screen.Draw();
@@ -115,6 +110,7 @@ public sealed class Game : GameWindow
 			SwapBuffers();
 		}
 
+		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PostRender, args );
 		Time.Delta = (float)args.Time;
 		Time.Elapsed += Time.Delta;
 	}
@@ -142,14 +138,14 @@ public sealed class Game : GameWindow
 		Vector3 wishDir = Vector3.Zero;
 
 		if ( keyboard.IsKeyDown( Keys.W ) )
-			wishDir += MainCamera.Transform.Forward;
+			wishDir += _mainCamera.Transform.Forward;
 		if ( keyboard.IsKeyDown( Keys.S ) )
-			wishDir -= MainCamera.Transform.Forward;
+			wishDir -= _mainCamera.Transform.Forward;
 
 		if ( keyboard.IsKeyDown( Keys.A ) )
-			wishDir += MainCamera.Transform.Right;
+			wishDir += _mainCamera.Transform.Right;
 		if ( keyboard.IsKeyDown( Keys.D ) )
-			wishDir -= MainCamera.Transform.Right;
+			wishDir -= _mainCamera.Transform.Right;
 
 		if ( wishDir.LengthSquared > 0 )
 			wishDir.Normalize();
@@ -161,27 +157,8 @@ public sealed class Game : GameWindow
 		if ( keyboard.IsKeyDown( Keys.Right ) )
 			lookAngles -= Vector3.UnitY * lookSpeed * dt;
 
-		MainCamera.Transform.Position += wishDir;
-		MainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
+		_mainCamera.Transform.Position += wishDir;
+		_mainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
 
-	}
-
-	public static int RgbToHex( int rgbColor )
-	{
-		int red = (rgbColor >> 16) & 0xFF;
-		int green = (rgbColor >> 8) & 0xFF;
-		int blue = rgbColor & 0xFF;
-
-		return (red << 16) | (green << 8) | blue;
-	}
-
-	public static float ByteToFloat( byte byteValue )
-	{
-		return (float)byteValue / 255.0f;
-	}
-
-	public static byte FloatToByte( float floatValue )
-	{
-		return (byte)Math.Round( floatValue * 255.0f );
 	}
 }

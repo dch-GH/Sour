@@ -12,7 +12,7 @@ public struct ModelDrawMission
 	public Matrix4 Matrix;
 }
 
-public class ModelRenderer
+public class ModelRenderer : IRender
 {
 	public static Material DefaultShader;
 

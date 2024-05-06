@@ -1,3 +1,5 @@
+using OpenTK.Graphics.OpenGL4;
+
 namespace Sour;
 
 public sealed class GameObject : IDisposable
@@ -29,9 +31,9 @@ public sealed class GameObject : IDisposable
 
 		Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
 
-		var rf = Game.ByteToFloat( red );
-		var gf = Game.ByteToFloat( green );
-		var bf = Game.ByteToFloat( blue );
+		var rf = red.ByteToFloat();
+		var gf = green.ByteToFloat();
+		var bf = blue.ByteToFloat();
 		Log.Info( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
 
 		_colorId = new Color4( rf, gf, bf, 1.0f );
@@ -128,9 +130,41 @@ public sealed class GameObject : IDisposable
 		return All.FirstOrDefault( x => x.ColorId == col4 );
 	}
 
+	public static GameObject? TryGetAt( Vector2i position )
+	{
+		var mouseX = position.X;
+		var mouseY = position.Y;
+
+		GL.ReadBuffer( ReadBufferMode.ColorAttachment1 );
+
+		Color255 pixelData = new();
+		GL.ReadPixels( mouseX, mouseY, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
+
+		// Log.Info( $"Pixel color (bytes): {pixelData}" );
+		// var red = pixelData.R;
+		// var green = pixelData.G;
+		// var blue = pixelData.B;
+		// Log.Info( $"Pixel color (floats): R: {red / 255f}, G: {green / 255f}, B: {blue / 255f}" );
+
+		return GetFromId( pixelData );
+	}
+
+	public static GameObject? TryGetAt( Vector2 position )
+	{
+		return TryGetAt( new Vector2i( (int)position.X, (int)position.Y ) );
+	}
+
 	public void ToggleSelected()
 	{
 		_selected = !_selected;
+		// if ( _selected )
+		// {
+		// 	Log.Info( $"GameObject : {_id} is now selected." );
+		// }
+		// else
+		// {
+		// 	Log.Info( $"GameObject : {_id} is now deselected." );
+		// }
 	}
 
 	public void Dispose()

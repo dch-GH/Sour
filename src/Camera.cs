@@ -22,10 +22,15 @@ public class Camera
 			0.1f,
 			300.0f
 		);
+
+		Game.UpdateEmitter.OnUpdateStage += Update;
 	}
 
-	public void Update( FrameEventArgs args )
+	private void Update( UpdateStage stage, FrameEventArgs args )
 	{
+		if ( stage is not UpdateStage.PreRender )
+			return;
+
 		ViewMatrix = Matrix4.LookAt(
 			Transform.Position,
 			Transform.Position + Transform.Forward,

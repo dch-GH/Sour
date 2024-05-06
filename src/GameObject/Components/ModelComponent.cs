@@ -40,8 +40,6 @@ public class ModelComponent : Component
 			UVs = mesh.TextureCoordinateChannels[0].ToArray();
 		}
 
-		Log.Info( mesh.VertexCount );
-
 		Positions = positions.ToArray();
 		Indices = indices.ToArray();
 
