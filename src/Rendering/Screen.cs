@@ -5,32 +5,15 @@ namespace Sour;
 
 public struct Screen
 {
-	public Vector2 ScreenSize;
+	public Vector2i Size;
+
 	public Material Material;
 	private VertexBuffer _vb;
 	private int _gameFbo;
 	private int _rbo;
 	private Texture _colorTexture;
 	private Texture _objectIdTexture;
-	// public static float[] QuadPositions = [
-	// 	-1f, 1f, 0f,
-	// 	-1f, -1f, 0f,
-	// 	1f, -1f, 0f,
-
-	// 	-1f, 1f, 0f,
-	// 	1f, -1f, 0f,
-	// 	1f, 1f, 0f];
-
-	// public static float[] QuadUVs = [
-	// 	0.0f, 1.0f, 0.0f,
-	// 	0.0f, 0.0f, 0.0f,
-	// 	1.0f, 0.0f, 0.0f,
-	// 	0.0f, 1.0f, 0.0f,
-	// 	1.0f, 0.0f, 0.0f,
-	// 	1.0f, 1.0f, 0.0f,
-	// ];
-
-	public static float[] QuadPositions = [
+	public static float[] QuadVertsUvs = [
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
 		 1.0f, -1.0f,  1.0f, 0.0f,
@@ -43,17 +26,16 @@ public struct Screen
 	public float[] Vertices;
 	public Texture ColorTexture => _colorTexture;
 	public Texture ObjectIdTexture => _objectIdTexture;
+	private bool _isResizing;
+	private bool _wasResizing;
 
-	public Screen( Vector2 size, Material material, VertexBuffer vb )
+	public Screen( Vector2i size, Material material, VertexBuffer vb )
 	{
-		ScreenSize = size;
+		Size = size;
 
 		var vertices = new List<float>();
-		foreach ( var p in QuadPositions )
+		foreach ( var p in QuadVertsUvs )
 			vertices.Add( p );
-
-		// foreach ( var uv in QuadUVs )
-		// 	vertices.Add( uv );
 
 		Vertices = vertices.ToArray();
 
@@ -65,8 +47,8 @@ public struct Screen
 
 	private void CreateFBO()
 	{
-		_colorTexture = new Texture( ScreenSize );
-		_objectIdTexture = new Texture( ScreenSize );
+		_colorTexture = new Texture( Size );
+		_objectIdTexture = new Texture( Size );
 
 		_gameFbo = GL.GenFramebuffer();
 		GL.BindFramebuffer( FramebufferTarget.Framebuffer, _gameFbo );
@@ -75,14 +57,13 @@ public struct Screen
 
 		_rbo = GL.GenRenderbuffer();
 		GL.BindRenderbuffer( RenderbufferTarget.Renderbuffer, _rbo );
-		GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, (int)ScreenSize.X, (int)ScreenSize.Y );
+		GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, (int)Size.X, (int)Size.Y );
 		GL.FramebufferRenderbuffer( FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, _rbo );
-		GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
 
 		var error = GL.CheckFramebufferStatus( FramebufferTarget.Framebuffer );
 		if ( error is not FramebufferErrorCode.FramebufferComplete )
 		{
-			Log.Info( $"Failed to create FBO for Screen{error}" );
+			Log.Info( $"Failed to create FBO for Screen {error}" );
 		}
 
 		GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
@@ -90,30 +71,41 @@ public struct Screen
 
 	public void PreDraw()
 	{
+		if ( !_isResizing && _wasResizing )
+			OnResizeFinished( Size );
+
 		// Bind to the game FBO.
 		GL.BindFramebuffer( FramebufferTarget.Framebuffer, _gameFbo );
-		GL.Viewport( 0, 0, (int)ScreenSize.X, (int)ScreenSize.Y );
+		GL.Viewport( 0, 0, Size.X, Size.Y );
 	}
 
 	public void Draw()
 	{
 		// Draw the screen quad.
 		GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
-		GL.Viewport( 0, 0, (int)ScreenSize.X, (int)ScreenSize.Y );
+		GL.Viewport( 0, 0, Size.X, Size.Y );
 
 		// Clear the actual view buffer.
 		GL.ClearColor( 0.05f, 0.25f, 0.3f, 1 );
 		GL.Clear( ClearBufferMask.ColorBufferBit );
 
 		_vb.DrawScreenQuad( this );
+		_wasResizing = _isResizing;
+		_isResizing = false;
 	}
 
-	public void Resize( int width, int height )
+	public void Resize( Vector2i nextSize )
 	{
-		ScreenSize = new Vector2( width, height );
+		Size = nextSize;
+		_isResizing = true;
+	}
 
-		if ( width == 0 || height == 0 )
-			ScreenSize = Vector2.One;
+	public void OnResizeFinished( Vector2i size )
+	{
+		Size = size;
+
+		if ( size.X == 0 || size.Y == 0 )
+			Size = Vector2i.One;
 
 		GL.DeleteFramebuffer( _gameFbo );
 		CreateFBO();

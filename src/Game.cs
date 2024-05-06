@@ -6,8 +6,7 @@ namespace Sour;
 
 public sealed class Game : GameWindow
 {
-	// TODO: Make this a Vector2i.
-	public static Vector2 ScreenSize;
+	public static Vector2i ScreenSize;
 	private Screen _screen;
 	public static KeyboardState Keyboard;
 	public static MouseState Mouse;
@@ -27,8 +26,9 @@ public sealed class Game : GameWindow
 	protected override void OnLoad()
 	{
 		base.OnLoad();
-
 		ScreenSize = ClientSize;
+		CenterWindow();
+
 		Materials = new();
 
 		MainCamera = new Camera( new Vector3( 0, 0, -5 ), Quaternion.Identity );
@@ -101,7 +101,8 @@ public sealed class Game : GameWindow
 
 				var selected = GameObject.GetFromId( pixelData );
 				selected?.ToggleSelected();
-				Log.Info( selected );
+				if ( selected is not null )
+					Log.Info( selected );
 			}
 
 			GL.DrawBuffers( 1, [DrawBuffersEnum.ColorAttachment0] );
@@ -122,7 +123,7 @@ public sealed class Game : GameWindow
 	{
 		base.OnResize( e );
 		ScreenSize = ClientSize;
-		_screen.Resize( e.Width, e.Height );
+		_screen.Resize( ScreenSize );
 	}
 
 	protected override void OnUpdateFrame( FrameEventArgs args )
