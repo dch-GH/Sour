@@ -60,6 +60,11 @@ public struct Screen
 		Material = material;
 		_vb = vb;
 
+		CreateFBO();
+	}
+
+	private void CreateFBO()
+	{
 		_colorTexture = new Texture( ScreenSize );
 		_objectIdTexture = new Texture( ScreenSize );
 
@@ -79,6 +84,8 @@ public struct Screen
 		{
 			Log.Info( $"Failed to create FBO for Screen{error}" );
 		}
+
+		GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
 	}
 
 	public void PreDraw()
@@ -104,8 +111,11 @@ public struct Screen
 	public void Resize( int width, int height )
 	{
 		ScreenSize = new Vector2( width, height );
-		Log.Info( ScreenSize );
-		_colorTexture.Resize( width, height );
-		_objectIdTexture.Resize( width, height );
+
+		if ( width == 0 || height == 0 )
+			ScreenSize = Vector2.One;
+
+		GL.DeleteFramebuffer( _gameFbo );
+		CreateFBO();
 	}
 }

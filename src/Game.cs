@@ -123,10 +123,15 @@ public sealed class Game : GameWindow
 	protected override void OnResize( ResizeEventArgs e )
 	{
 		base.OnResize( e );
-		GL.Viewport( 0, 0, e.Width, e.Height );
 		ScreenSize = ClientSize;
+		GL.Viewport( 0, 0, e.Width, e.Height );
 		_screen.Resize( e.Width, e.Height );
 	}
+
+	// protected override void OnFramebufferResize( FramebufferResizeEventArgs e )
+	// {
+	// 	base.OnFramebufferResize( e );
+	// }
 
 	protected override void OnUpdateFrame( FrameEventArgs args )
 	{
