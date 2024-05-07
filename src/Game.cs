@@ -48,11 +48,11 @@ public sealed class Game : GameWindow
 
 		var cube = GameObject.Spawn();
 		cube.AddComponent( new ModelComponent( "Resources/Models/Box/box.fbx" ) );
-		cube.Transform.Rotation += Quaternion.FromAxisAngle( Vector3.UnitX, 35f );
+		cube.Transform.Rotation += Quaternion.FromAxisAngle( Axis.Right, 35f );
 
 		var cone = GameObject.Spawn();
 		cone.AddComponent( new ModelComponent( "Resources/Models/Cone/cone.obj", new Material( fragShaderPath: "Resources/Shaders/frag.glsl" ) ) );
-		cone.Transform.Position += Vector3.UnitX * 3f;
+		cone.Transform.Position += Axis.Right * 3f;
 		cone.AddComponent<RotatorComponent>();
 
 		// TODO: Make this easier to manage.

@@ -13,6 +13,7 @@ public class Program
 	{
 		Console.WriteLine( "Running..." );
 		var native = NativeWindowSettings.Default;
+		native.Title = "Sour Engine";
 		native.ClientSize = new Vector2i( 800, 900 );
 		var window = new Game( GameWindowSettings.Default, native );
 

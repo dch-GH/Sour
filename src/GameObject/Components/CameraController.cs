@@ -45,23 +45,23 @@ public sealed class CameraController : Component
 		wishDir *= moveSpeed * dt;
 
 		if ( keyboard.IsKeyDown( Keys.Left ) )
-			lookAngles += Vector3.UnitY * lookSpeed * dt;
+			lookAngles += Axis.Up * lookSpeed * dt;
 		if ( keyboard.IsKeyDown( Keys.Right ) )
-			lookAngles -= Vector3.UnitY * lookSpeed * dt;
+			lookAngles -= Axis.Up * lookSpeed * dt;
 
 
 		if ( !Game.Mouse.Visible )
 		{
 			if ( keyboard.IsKeyDown( Keys.Down ) )
-				lookAngles += Vector3.UnitX * lookSpeed * dt;
+				lookAngles += Axis.Right * lookSpeed * dt;
 			if ( keyboard.IsKeyDown( Keys.Up ) )
-				lookAngles -= Vector3.UnitX * lookSpeed * dt;
+				lookAngles += Axis.Left * lookSpeed * dt;
 
 			lookAngles.X += delta.Y * lookSpeed * dt;
 			lookAngles.Y -= delta.X * lookSpeed * dt;
 		}
 
 		GameObject.Transform.Position += wishDir;
-		GameObject.Transform.Rotation = Quaternion.FromAxisAngle( Vector3.UnitY, lookAngles.Y ) * Quaternion.FromAxisAngle( Vector3.UnitX, lookAngles.X );
+		GameObject.Transform.Rotation = Quaternion.FromAxisAngle( Axis.Up, lookAngles.Y ) * Quaternion.FromAxisAngle( Axis.Right, lookAngles.X );
 	}
 }

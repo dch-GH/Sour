@@ -10,7 +10,7 @@ public class Camera : Component
 	protected override void OnAttached()
 	{
 		Main = this;
-		ViewMatrix = Matrix4.LookAt( Transform.Position, Vector3.Zero, Vector3.UnitY );
+		ViewMatrix = Matrix4.LookAt( Transform.Position, Vector3.Zero, Axis.Up );
 		ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
 			MathHelper.DegreesToRadians( FieldOfView ),
 			Game.ScreenSize.X / (float)Game.ScreenSize.Y,
@@ -22,7 +22,7 @@ public class Camera : Component
 	public override void Render()
 	{
 		base.Render();
-		ViewMatrix = Matrix4.LookAt( Transform.Position, Transform.Position + Transform.Forward, Vector3.UnitY );
+		ViewMatrix = Matrix4.LookAt( Transform.Position, Transform.Position + Transform.Forward, Axis.Up );
 
 		ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
 			MathHelper.DegreesToRadians( FieldOfView ),
