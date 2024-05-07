@@ -29,14 +29,17 @@ public sealed class GameObject : IDisposable
 		byte green = (byte)(_id >> 8 & 0xFF);
 		byte blue = (byte)(_id & 0xFF);
 
-		Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
 
 		var rf = red.ByteToFloat();
 		var gf = green.ByteToFloat();
 		var bf = blue.ByteToFloat();
-		Log.Info( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
-
 		_colorId = new Color4( rf, gf, bf, 1.0f );
+
+		if ( Game.DebugObjectIdMousePick )
+		{
+			Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
+			Log.Info( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
+		}
 
 		Transform = new();
 		_components = new();
@@ -132,19 +135,19 @@ public sealed class GameObject : IDisposable
 
 	public static GameObject? TryGetAt( Vector2i position )
 	{
-		var mouseX = position.X;
-		var mouseY = position.Y;
+		var x = position.X;
+		var y = position.Y;
 
 		GL.ReadBuffer( ReadBufferMode.ColorAttachment1 );
 
 		Color255 pixelData = new();
-		GL.ReadPixels( mouseX, mouseY, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
+		GL.ReadPixels( x, y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
 
-		// Log.Info( $"Pixel color (bytes): {pixelData}" );
-		// var red = pixelData.R;
-		// var green = pixelData.G;
-		// var blue = pixelData.B;
-		// Log.Info( $"Pixel color (floats): R: {red / 255f}, G: {green / 255f}, B: {blue / 255f}" );
+		if ( Game.DebugObjectIdMousePick )
+		{
+			Log.Info( $"Pixel color (bytes): {pixelData}" );
+			Log.Info( $"Pixel color (floats): {pixelData.ToColor4()}" );
+		}
 
 		return GetFromId( pixelData );
 	}
@@ -157,14 +160,14 @@ public sealed class GameObject : IDisposable
 	public void ToggleSelected()
 	{
 		_selected = !_selected;
-		// if ( _selected )
-		// {
-		// 	Log.Info( $"GameObject : {_id} is now selected." );
-		// }
-		// else
-		// {
-		// 	Log.Info( $"GameObject : {_id} is now deselected." );
-		// }
+		if ( _selected )
+		{
+			Log.Info( $"GameObject : {_id} is now selected." );
+		}
+		else
+		{
+			Log.Info( $"GameObject : {_id} is now deselected." );
+		}
 	}
 
 	public void Dispose()

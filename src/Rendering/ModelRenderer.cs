@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -12,25 +11,24 @@ public struct ModelDrawMission
 	public Matrix4 Matrix;
 }
 
-public class ModelRenderer : IRender
+public sealed class ModelRenderer : IRender
 {
 	public static Material DefaultShader;
 
-	bool wireFrame = false;
-	Camera camera;
+	private bool wireFrame = false;
+	private Queue<ModelDrawMission> modelMissions;
+	private VertexBuffer vb;
 
-	Queue<ModelDrawMission> modelMissions;
-	VertexBuffer vb;
-
-	public ModelRenderer( Game window, Camera cam )
+	public ModelRenderer()
 	{
-		camera = cam;
 		modelMissions = new();
 		vb = new();
 		DefaultShader = new Material(
 			Material.DefaultVertexShaderPath,
 			Material.DefaultFragmentShaderPath
 		);
+
+		Game.UpdateEmitter.OnUpdateStage += Update;
 	}
 
 	public void Render( FrameEventArgs args )
@@ -44,11 +42,9 @@ public class ModelRenderer : IRender
 		}
 	}
 
-	public void Update( FrameEventArgs args, KeyboardState keyboard )
+	private void Update( UpdateStage stage, FrameEventArgs args )
 	{
-		var dt = ((float)args.Time);
-
-		if ( keyboard.IsKeyReleased( Keys.Z ) )
+		if ( Game.Keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
 	}
 

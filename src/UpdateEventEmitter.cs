@@ -6,6 +6,9 @@ public enum UpdateStage
 {
 	PreRender,
 	PostRender,
+	PreUpdate,
+	Update,
+	PostUpdate
 }
 
 public struct UpdateEventEmitter()

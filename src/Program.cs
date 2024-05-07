@@ -11,7 +11,7 @@ public class Program
 {
 	static void Main( string[] args )
 	{
-		Console.WriteLine( "Hello, World!" );
+		Console.WriteLine( "Running..." );
 		var native = NativeWindowSettings.Default;
 		native.ClientSize = new Vector2i( 800, 900 );
 		var window = new Game( GameWindowSettings.Default, native );

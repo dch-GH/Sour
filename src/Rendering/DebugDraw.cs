@@ -10,12 +10,12 @@ public static class DebugDraw
 		public Color4 Color;
 		public float? Duration;
 		public Matrix4? Matrix;
+		public bool Wireframe;
 	}
 
-	static Queue<DebugDrawMission> missions;
-
-	static VertexBuffer vb;
-	static Material DebugDrawShader;
+	private static Queue<DebugDrawMission> missions;
+	private static VertexBuffer vb;
+	private static Material DebugDrawShader;
 
 	public static void Init()
 	{
@@ -57,10 +57,12 @@ public static class DebugDraw
 			Vertices = verts,
 			Color = color,
 			Duration = duration > 0 ? duration : null,
-			Matrix = model
+			Matrix = model,
+			Wireframe = true
 		} );
 	}
 
+	// TODO: Add option for non-wireframe box3.
 	public static void Box3( Box3 box, Color4 color, float duration = 0, Matrix4? model = null )
 	{
 		void drawLine( Vector3 start, Vector3 end )
@@ -71,10 +73,10 @@ public static class DebugDraw
 				Vertices = verts,
 				Color = color,
 				Duration = duration > 0 ? duration : null,
-				Matrix = model
+				Matrix = model,
+				Wireframe = true
 			} );
 		}
-
 
 		Vector3 a = new Vector3( box.Min.X, box.Min.Y, box.Min.Z );
 		Vector3 b = new Vector3( box.Max.X, box.Min.Y, box.Min.Z );
@@ -96,5 +98,10 @@ public static class DebugDraw
 		drawLine( b5, b6 );
 		drawLine( b6, b7 );
 		drawLine( b7, b4 );
+	}
+
+	// TODO: 
+	public static void Box2( Box2i box, Color4 color, float duration = 0, Matrix4? model = null )
+	{
 	}
 }

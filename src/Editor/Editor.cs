@@ -19,10 +19,10 @@ public sealed class Editor
 		if ( stage is not UpdateStage.PreRender )
 			return;
 
-		if ( Game.Mouse.IsButtonReleased( MouseButton.Left ) )
-		{
-			RequestObjectIdRender = true;
-		}
+		if ( !Game.Mouse.State.IsButtonReleased( MouseButton.Left ) )
+			return;
+
+		RequestObjectIdRender = true;
 	}
 
 	private void Render( RenderStage stage, FrameEventArgs args )
@@ -34,7 +34,11 @@ public sealed class Editor
 		{
 			RequestObjectIdRender = false;
 
-			var wantsToSelect = GameObject.TryGetAt( Game.Mouse.Position );
+			var coords = Game.Mouse.Position;
+			// TODO: Why? 
+			coords.Y = Game.ScreenSize.Y - coords.Y;
+
+			var wantsToSelect = GameObject.TryGetAt( coords );
 
 			if ( wantsToSelect is not null )
 			{

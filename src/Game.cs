@@ -1,6 +1,6 @@
-﻿using System.Data.Common;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sour;
@@ -8,29 +8,23 @@ namespace Sour;
 public sealed class Game : GameWindow
 {
 	public static Vector2i ScreenSize;
+	public static FrameEventArgs CurrentFrameEvent;
 	public static KeyboardState Keyboard;
-	public static MouseState Mouse;
+	public static Mouse Mouse;
 	public static MaterialManager Materials;
 	public static ModelRenderer ModelRenderer;
 	public static UpdateEventEmitter UpdateEmitter;
 	public static RenderEventEmitter RenderEmitter;
+	public static bool DebugObjectIdMousePick;
 
-	private Camera _mainCamera;
+	private GameObject _mainCamera;
 	private Screen _screen;
 	private Editor _editor;
-
-	Vector3 lookAngles;
-	float moveSpeed = 6;
-	float lookSpeed = 3;
 
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
 		UpdateEmitter = new();
 		RenderEmitter = new();
-
-		_mainCamera = new Camera( Vector3.Zero, Quaternion.Identity );
-		Camera.Main = _mainCamera;
-
 		_editor = new();
 	}
 
@@ -41,21 +35,29 @@ public sealed class Game : GameWindow
 		CenterWindow();
 
 		Materials = new();
-
-		_mainCamera.Transform.Position = new Vector3( 0, 0, -5 );
+		ModelRenderer = new();
 		DebugDraw.Init();
-		ModelRenderer = new( this, _mainCamera );
 
 		var screenMaterial = new Material( "Resources/Shaders/Screen/vert_screen.glsl", "Resources/Shaders/Screen/frag_screen.glsl" );
 		_screen = new( ScreenSize, screenMaterial, new VertexBuffer() );
 
+		_mainCamera = GameObject.Spawn();
+		_mainCamera.Transform.Position = new Vector3( 0, 0, -5 );
+		_mainCamera.AddComponent( new Camera() );
+		_mainCamera.AddComponent( new CameraController() );
+
 		var cube = GameObject.Spawn();
-		cube.AddComponent<ModelComponent>( new ModelComponent( "Resources/Models/Box/box.fbx" ) );
+		cube.AddComponent( new ModelComponent( "Resources/Models/Box/box.fbx" ) );
+		cube.Transform.Rotation += Quaternion.FromAxisAngle( Vector3.UnitX, 35f );
 
 		var cone = GameObject.Spawn();
 		cone.AddComponent( new ModelComponent( "Resources/Models/Cone/cone.obj", new Material( fragShaderPath: "Resources/Shaders/frag.glsl" ) ) );
 		cone.Transform.Position += Vector3.UnitX * 3f;
 		cone.AddComponent<RotatorComponent>();
+
+		// TODO: Make this easier to manage.
+		CursorState = CursorState.Normal;
+		Mouse.Visible = true;
 	}
 
 	public override void Run()
@@ -67,7 +69,6 @@ public sealed class Game : GameWindow
 	{
 		base.OnRenderFrame( args );
 
-
 		// Update materials first for a chance to hotload shaders.
 		if ( Materials.AnyShadersNeedHotload )
 			Materials.TryHotloadShaders();
@@ -77,11 +78,13 @@ public sealed class Game : GameWindow
 
 		// GameObjects and Components submit drawtasks here, which are drawn later in this loop.
 		GameObject.RenderAll();
+
 		{
 			_screen.PreDraw();
 
 			if ( _editor.RequestObjectIdRender )
 			{
+				// Only render to the ObjectId texture if we need it.
 				GL.DrawBuffers( 2, [DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1] );
 			}
 			else
@@ -113,6 +116,7 @@ public sealed class Game : GameWindow
 		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PostRender, args );
 		Time.Delta = (float)args.Time;
 		Time.Elapsed += Time.Delta;
+		Time.Frames += 1;
 	}
 
 	protected override void OnResize( ResizeEventArgs e )
@@ -125,40 +129,30 @@ public sealed class Game : GameWindow
 	protected override void OnUpdateFrame( FrameEventArgs args )
 	{
 		base.OnUpdateFrame( args );
-		var dt = ((float)args.Time);
-		var keyboard = KeyboardState;
-		var mouse = MouseState;
+		CurrentFrameEvent = args;
 
-		Keyboard = keyboard;
-		Mouse = MouseState;
+		Keyboard = KeyboardState;
+		Mouse.State = MouseState;
+		Mouse.Delta = MouseState.Delta;
+
+		// The mouse gets snapped to the window so ignore the insane delta value.
+		if ( Time.IsFirstFrame )
+			Mouse.Delta = Vector2.Zero;
+
+		if ( Keyboard.IsKeyReleased( Keys.Tab ) )
+		{
+			CursorState = CursorState == CursorState.Grabbed ? CursorState.Normal : CursorState.Grabbed;
+
+			// TODO: Make this easier to manage.
+			Mouse.Visible = CursorState == CursorState.Normal;
+			Mouse.Delta = Vector2.Zero;
+		}
+
+		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PreUpdate, args );
 
 		GameObject.UpdateAll();
-		ModelRenderer.Update( args, keyboard );
+		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.Update, args );
 
-		Vector3 wishDir = Vector3.Zero;
-
-		if ( keyboard.IsKeyDown( Keys.W ) )
-			wishDir += _mainCamera.Transform.Forward;
-		if ( keyboard.IsKeyDown( Keys.S ) )
-			wishDir -= _mainCamera.Transform.Forward;
-
-		if ( keyboard.IsKeyDown( Keys.A ) )
-			wishDir += _mainCamera.Transform.Right;
-		if ( keyboard.IsKeyDown( Keys.D ) )
-			wishDir -= _mainCamera.Transform.Right;
-
-		if ( wishDir.LengthSquared > 0 )
-			wishDir.Normalize();
-
-		wishDir *= moveSpeed * dt;
-
-		if ( keyboard.IsKeyDown( Keys.Left ) )
-			lookAngles += Vector3.UnitY * lookSpeed * dt;
-		if ( keyboard.IsKeyDown( Keys.Right ) )
-			lookAngles -= Vector3.UnitY * lookSpeed * dt;
-
-		_mainCamera.Transform.Position += wishDir;
-		_mainCamera.Transform.Rotation = Quaternion.FromEulerAngles( lookAngles );
-
+		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PostUpdate, args );
 	}
 }

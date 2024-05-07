@@ -1,4 +1,3 @@
-using System.Net.WebSockets;
 using OpenTK.Graphics.OpenGL4;
 
 namespace Sour;
@@ -13,16 +12,6 @@ public struct Screen
 	private int _rbo;
 	private Texture _colorTexture;
 	private Texture _objectIdTexture;
-	public static float[] QuadVertsUvs = [
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		 1.0f,  1.0f,  1.0f, 1.0f
-	];
-
 	public float[] Vertices;
 	public Texture ColorTexture => _colorTexture;
 	public Texture ObjectIdTexture => _objectIdTexture;
@@ -34,7 +23,7 @@ public struct Screen
 		Size = size;
 
 		var vertices = new List<float>();
-		foreach ( var p in QuadVertsUvs )
+		foreach ( var p in Shapes.QuadVertsUvs )
 			vertices.Add( p );
 
 		Vertices = vertices.ToArray();
@@ -57,7 +46,7 @@ public struct Screen
 
 		_rbo = GL.GenRenderbuffer();
 		GL.BindRenderbuffer( RenderbufferTarget.Renderbuffer, _rbo );
-		GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, (int)Size.X, (int)Size.Y );
+		GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, Size.X, Size.Y );
 		GL.FramebufferRenderbuffer( FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, _rbo );
 
 		var error = GL.CheckFramebufferStatus( FramebufferTarget.Framebuffer );
