@@ -13,8 +13,6 @@ public struct ModelDrawMission
 
 internal sealed class ModelRenderer : IRender
 {
-	public static Material DefaultShader;
-
 	private bool wireFrame = false;
 	private Queue<ModelDrawMission> modelMissions;
 	private VertexBuffer vb;
@@ -23,10 +21,6 @@ internal sealed class ModelRenderer : IRender
 	{
 		modelMissions = new();
 		vb = new();
-		DefaultShader = new Material(
-			Material.DefaultVertexShaderPath,
-			Material.DefaultFragmentShaderPath
-		);
 
 		Engine.UpdateEmitter.OnUpdateStage += Update;
 	}
@@ -56,7 +50,6 @@ internal sealed class ModelRenderer : IRender
 	private void DrawModel( ModelDrawMission mission )
 	{
 		Debug.Assert( mission.Model.Material is not null );
-		// vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material, ref mission.Matrix, wireFrame, [new( "time", Time.Elapsed )] );
 		vb.DrawModel( mission.Model, ref mission.Matrix, wireFrame, [new ShaderUniformVariable( "aObjectId", mission.Model.GameObject.ColorId )] );
 		CheckGLError();
 	}

@@ -60,6 +60,8 @@ public sealed class Engine : GameWindow
 		cone.AddComponent( new ModelComponent( "Resources/Models/Cone/cone.obj", new Material( fragShaderPath: "Resources/Shaders/frag.glsl" ) ) );
 		cone.Transform.Position += Axis.Right * 3f;
 		cone.AddComponent<RotatorComponent>();
+
+		var tilemap = GameObject.Spawn().AddComponent<Tilemap>();
 	}
 
 	public override void Run()

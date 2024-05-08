@@ -18,7 +18,7 @@ public sealed class GameObject : IDisposable
 	private bool _selected = false;
 
 	internal static List<GameObject> _all = new();
-	private List<Component> _components;
+	private HashSet<Component> _components;
 
 	internal GameObject()
 	{
@@ -79,18 +79,16 @@ public sealed class GameObject : IDisposable
 
 	public void Update()
 	{
-		for ( int i = 0; i < _components.Count; i++ )
+		foreach ( Component? c in _components )
 		{
-			Component? c = _components[i];
 			c.Update();
 		}
 	}
 
 	public void Render()
 	{
-		for ( int i = 0; i < _components.Count; i++ )
+		foreach ( Component? c in _components )
 		{
-			Component? c = _components[i];
 			c.Render();
 		}
 	}
