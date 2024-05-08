@@ -73,7 +73,7 @@ public class ModelComponent : Component
 
 	public override void Render()
 	{
-		var r = Game.ModelRenderer;
+		var r = Engine.ModelRenderer;
 		var job = new ModelDrawMission
 		{
 			Model = this,

@@ -11,7 +11,7 @@ public struct ModelDrawMission
 	public Matrix4 Matrix;
 }
 
-public sealed class ModelRenderer : IRender
+internal sealed class ModelRenderer : IRender
 {
 	public static Material DefaultShader;
 
@@ -28,7 +28,7 @@ public sealed class ModelRenderer : IRender
 			Material.DefaultFragmentShaderPath
 		);
 
-		Game.UpdateEmitter.OnUpdateStage += Update;
+		Engine.UpdateEmitter.OnUpdateStage += Update;
 	}
 
 	public void Render( FrameEventArgs args )
@@ -44,7 +44,7 @@ public sealed class ModelRenderer : IRender
 
 	private void Update( UpdateStage stage, FrameEventArgs args )
 	{
-		if ( Game.Keyboard.IsKeyReleased( Keys.Z ) )
+		if ( Engine.Keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
 	}
 
@@ -67,7 +67,7 @@ public sealed class ModelRenderer : IRender
 		if ( err != OpenTK.Graphics.OpenGL4.ErrorCode.NoError )
 		{
 			// TODO: Getting InvalidValue here, but it doesn't break anything.
-			Log.Info( err );
+			Log.InfoInternal( err );
 			//throw new Exception( err.ToString() );
 		}
 	}

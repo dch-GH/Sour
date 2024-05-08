@@ -1,26 +1,28 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Windowing.Common;
+﻿using OpenTK.Windowing.Common;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sour;
 
-public sealed class Game : GameWindow
+public sealed class Engine : GameWindow
 {
 	public static Vector2i ScreenSize;
 	public static FrameEventArgs CurrentFrameEvent;
 	public static KeyboardState Keyboard;
 	public static Mouse Mouse;
-	public static MaterialManager Materials;
-	public static ModelRenderer ModelRenderer;
 	public static UpdateEventEmitter UpdateEmitter;
 	public static RenderEventEmitter RenderEmitter;
-	public static bool DebugObjectIdMousePick;
+
+	internal static MaterialManager Materials;
+	internal static ModelRenderer ModelRenderer;
+	internal static bool DebugObjectIdMousePick;
 
 	private FPSCounter _fpsCounter;
 	private GameObject _mainCamera;
 	private Screen _screen;
 	private Editor _editor;
-	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
+
+	internal Engine( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
 		UpdateEmitter = new();
 		RenderEmitter = new();
@@ -41,6 +43,10 @@ public sealed class Game : GameWindow
 		var screenMaterial = new Material( "Resources/Shaders/Screen/vert_screen.glsl", "Resources/Shaders/Screen/frag_screen.glsl" );
 		_screen = new( ScreenSize, screenMaterial, new VertexBuffer() );
 
+		// TODO: Make this easier to manage.
+		CursorState = CursorState.Normal;
+		Mouse.Visible = true;
+
 		_mainCamera = GameObject.Spawn();
 		_mainCamera.Transform.Position = new Vector3( 0, 0, -5 );
 		_mainCamera.AddComponent( new Camera() );
@@ -54,10 +60,6 @@ public sealed class Game : GameWindow
 		cone.AddComponent( new ModelComponent( "Resources/Models/Cone/cone.obj", new Material( fragShaderPath: "Resources/Shaders/frag.glsl" ) ) );
 		cone.Transform.Position += Axis.Right * 3f;
 		cone.AddComponent<RotatorComponent>();
-
-		// TODO: Make this easier to manage.
-		CursorState = CursorState.Normal;
-		Mouse.Visible = true;
 	}
 
 	public override void Run()

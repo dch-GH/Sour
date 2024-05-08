@@ -14,11 +14,12 @@ public sealed class CameraController : Component
 	private bool _recordingDelta;
 	private float _timeSinceRecordingStarted;
 
+
 	public override void Render()
 	{
 		var dt = Time.Delta;
-		var keyboard = Game.Keyboard;
-		var delta = Game.Mouse.Delta;
+		var keyboard = Engine.Keyboard;
+		var delta = Engine.Mouse.Delta;
 
 		if ( _timeSinceRecordingStarted >= 1.0f )
 		{
@@ -79,7 +80,7 @@ public sealed class CameraController : Component
 		if ( keyboard.IsKeyDown( Keys.Up ) )
 			_pitch -= lookSpeed * 0.2f * dt;
 
-		if ( !Game.Mouse.Visible )
+		if ( !Engine.Mouse.Visible )
 		{
 			_pitch += delta.Y * lookSpeed * dt;
 			_yaw -= delta.X * lookSpeed * dt;

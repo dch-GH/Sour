@@ -9,16 +9,18 @@ public sealed class GameObject : IDisposable
 	private readonly uint _id;
 	public static List<GameObject> All => _all;
 	public Transform Transform;
+	public Vector3 Position => Transform.Position;
+	public Quaternion Rotation => Transform.Rotation;
 	public Box3 Bounds;
 	public Color4 ColorId => _colorId;
 	private Color4 _colorId;
 	public bool IsSelected => _selected;
 	private bool _selected = false;
 
-	private static List<GameObject> _all = new();
+	internal static List<GameObject> _all = new();
 	private List<Component> _components;
 
-	private GameObject()
+	internal GameObject()
 	{
 		DateTime epochStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
 		TimeSpan span = DateTime.UtcNow - epochStart;
@@ -35,10 +37,10 @@ public sealed class GameObject : IDisposable
 		var bf = blue.ByteToFloat();
 		_colorId = new Color4( rf, gf, bf, 1.0f );
 
-		if ( Game.DebugObjectIdMousePick )
+		if ( Engine.DebugObjectIdMousePick )
 		{
-			Log.Info( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
-			Log.Info( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
+			Log.InfoInternal( $"Color in bytes: R: {red}, G: {green}, B: {blue}" );
+			Log.InfoInternal( $"Color in floats: R: {rf}, G: {gf}, B: {bf}" );
 		}
 
 		Transform = new();
@@ -127,8 +129,8 @@ public sealed class GameObject : IDisposable
 		var col4 = color.ToColor4();
 		// foreach ( var go in All )
 		// {
-		// 	Log.Info( $"Looking for {col4}" );
-		// 	Log.Info( $"This GameObject has {go.ColorId}" );
+		// 	Log.InfoInternal( $"Looking for {col4}" );
+		// 	Log.InfoInternal( $"This GameObject has {go.ColorId}" );
 		// }
 		return All.FirstOrDefault( x => x.ColorId == col4 );
 	}
@@ -143,10 +145,10 @@ public sealed class GameObject : IDisposable
 		Color255 pixelData = new();
 		GL.ReadPixels( x, y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, ref pixelData );
 
-		if ( Game.DebugObjectIdMousePick )
+		if ( Engine.DebugObjectIdMousePick )
 		{
-			Log.Info( $"Pixel color (bytes): {pixelData}" );
-			Log.Info( $"Pixel color (floats): {pixelData.ToColor4()}" );
+			Log.InfoInternal( $"Pixel color (bytes): {pixelData}" );
+			Log.InfoInternal( $"Pixel color (floats): {pixelData.ToColor4()}" );
 		}
 
 		return GetFromId( pixelData );
@@ -162,11 +164,11 @@ public sealed class GameObject : IDisposable
 		_selected = !_selected;
 		if ( _selected )
 		{
-			Log.Info( $"GameObject : {_id} is now selected." );
+			Log.InfoInternal( $"GameObject : {_id} is now selected." );
 		}
 		else
 		{
-			Log.Info( $"GameObject : {_id} is now deselected." );
+			Log.InfoInternal( $"GameObject : {_id} is now deselected." );
 		}
 	}
 
@@ -174,7 +176,6 @@ public sealed class GameObject : IDisposable
 	{
 		foreach ( var component in _components )
 		{
-			component.Dispose();
 			_components.Remove( component );
 		}
 

@@ -5,152 +5,152 @@ namespace Sour;
 
 public class Material
 {
-	public const string DefaultVertexShaderPath = "Resources/Shaders/vert.glsl";
-	public const string DefaultFragmentShaderPath = "Resources/Shaders/frag.glsl";
-	public int ProgramHandle;
-	public Shader Vertex;
-	public Shader Fragment;
-	public Texture? Texture;
+    public const string DefaultVertexShaderPath = "Resources/Shaders/vert.glsl";
+    public const string DefaultFragmentShaderPath = "Resources/Shaders/frag.glsl";
+    public int ProgramHandle;
+    public Shader Vertex;
+    public Shader Fragment;
+    public Texture? Texture;
 
-	FileSystemWatcher watcher;
+    FileSystemWatcher watcher;
 
-	public Action OnFileChanged;
-	public bool NeedsHotload;
+    public Action OnFileChanged;
+    public bool NeedsHotload;
 
-	public Material( string? vtxShaderPath = null, string? fragShaderPath = null )
-	{
-		vtxShaderPath ??= DefaultVertexShaderPath;
-		fragShaderPath ??= DefaultFragmentShaderPath;
+    public Material( string? vtxShaderPath = null, string? fragShaderPath = null )
+    {
+        vtxShaderPath ??= DefaultVertexShaderPath;
+        fragShaderPath ??= DefaultFragmentShaderPath;
 
-		Vertex = new( ShaderType.VertexShader, vtxShaderPath );
-		Fragment = new( ShaderType.FragmentShader, fragShaderPath );
+        Vertex = new( ShaderType.VertexShader, vtxShaderPath );
+        Fragment = new( ShaderType.FragmentShader, fragShaderPath );
 
-		Reload();
+        Reload();
 
-		var log = GL.GetProgramInfoLog( ProgramHandle );
-		Console.WriteLine( log );
+        var log = GL.GetProgramInfoLog( ProgramHandle );
+        Console.WriteLine( log );
 
-		watcher = new FileSystemWatcher( Path.GetDirectoryName( vtxShaderPath ) );
-		watcher.EnableRaisingEvents = true;
-		watcher.Changed += Watcher_Changed;
-		Game.Materials.AddMaterial( this );
-	}
+        watcher = new FileSystemWatcher( Path.GetDirectoryName( vtxShaderPath ) );
+        watcher.EnableRaisingEvents = true;
+        watcher.Changed += Watcher_Changed;
+        Engine.Materials.AddMaterial( this );
+    }
 
-	public Material WithTexture( Texture texture )
-	{
-		Texture = texture;
-		return this;
-	}
+    public Material WithTexture( Texture texture )
+    {
+        Texture = texture;
+        return this;
+    }
 
-	private void Watcher_Changed( object sender, FileSystemEventArgs e )
-	{
-		OnFileChanged?.Invoke();
-		NeedsHotload = true;
-	}
+    private void Watcher_Changed( object sender, FileSystemEventArgs e )
+    {
+        OnFileChanged?.Invoke();
+        NeedsHotload = true;
+    }
 
-	public void Reload()
-	{
-		if ( ProgramHandle != 0 )
-			GL.DeleteProgram( ProgramHandle );
+    public void Reload()
+    {
+        if ( ProgramHandle != 0 )
+            GL.DeleteProgram( ProgramHandle );
 
-		ProgramHandle = GL.CreateProgram();
+        ProgramHandle = GL.CreateProgram();
 
-		int vertexHandle = Vertex.Load();
-		int fragHandle = Fragment.Load();
+        int vertexHandle = Vertex.Load();
+        int fragHandle = Fragment.Load();
 
-		GL.AttachShader( ProgramHandle, vertexHandle );
-		GL.AttachShader( ProgramHandle, fragHandle );
+        GL.AttachShader( ProgramHandle, vertexHandle );
+        GL.AttachShader( ProgramHandle, fragHandle );
 
-		GL.LinkProgram( ProgramHandle );
+        GL.LinkProgram( ProgramHandle );
 
-		GL.DetachShader( ProgramHandle, vertexHandle );
-		GL.DetachShader( ProgramHandle, fragHandle );
+        GL.DetachShader( ProgramHandle, vertexHandle );
+        GL.DetachShader( ProgramHandle, fragHandle );
 
-		GL.DeleteShader( vertexHandle );
-		GL.DeleteShader( fragHandle );
-	}
+        GL.DeleteShader( vertexHandle );
+        GL.DeleteShader( fragHandle );
+    }
 
-	public bool TryGetUniformLocation( string name, out int uniformLocation )
-	{
-		uniformLocation = GL.GetUniformLocation( ProgramHandle, name );
-		if ( uniformLocation < 0 )
-			return false;
+    public bool TryGetUniformLocation( string name, out int uniformLocation )
+    {
+        uniformLocation = GL.GetUniformLocation( ProgramHandle, name );
+        if ( uniformLocation < 0 )
+            return false;
 
-		return true;
-	}
+        return true;
+    }
 
-	public bool TryGetAttribLocation( string name, out int atribLocation )
-	{
-		atribLocation = GL.GetAttribLocation( ProgramHandle, name );
-		if ( atribLocation < 0 )
-			return false;
+    public bool TryGetAttribLocation( string name, out int atribLocation )
+    {
+        atribLocation = GL.GetAttribLocation( ProgramHandle, name );
+        if ( atribLocation < 0 )
+            return false;
 
-		return true;
-	}
+        return true;
+    }
 
-	public bool TrySetUniformFloat( string name, float value )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.Uniform1( location, value );
-			return true;
-		}
+    public bool TrySetUniformFloat( string name, float value )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.Uniform1( location, value );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public bool TrySetUniformVector2( string name, OpenTK.Mathematics.Vector2 vec2 )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.Uniform2( location, vec2 );
-			return true;
-		}
+    public bool TrySetUniformVector2( string name, OpenTK.Mathematics.Vector2 vec2 )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.Uniform2( location, vec2 );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public bool TrySetUniformVector3( string name, OpenTK.Mathematics.Vector3 vector3 )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.Uniform3( location, vector3 );
-			return true;
-		}
+    public bool TrySetUniformVector3( string name, OpenTK.Mathematics.Vector3 vector3 )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.Uniform3( location, vector3 );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public bool TrySetUniformColor4( string name, Color4 color )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.Uniform4( location, color );
-			return true;
-		}
+    public bool TrySetUniformColor4( string name, Color4 color )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.Uniform4( location, color );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public bool TrySetUniformMatrix4( string name, ref Matrix4 matrix )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.UniformMatrix4( location, false, ref matrix );
-			return true;
-		}
+    public bool TrySetUniformMatrix4( string name, ref Matrix4 matrix )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.UniformMatrix4( location, false, ref matrix );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public bool TrySetUniformSampler2D( string name, Texture texture )
-	{
-		if ( TryGetUniformLocation( name, out var location ) )
-		{
-			GL.Uniform1( location, texture.Handle );
-			return true;
-		}
+    public bool TrySetUniformSampler2D( string name, Texture texture )
+    {
+        if ( TryGetUniformLocation( name, out var location ) )
+        {
+            GL.Uniform1( location, texture.Handle );
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 }
