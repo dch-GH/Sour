@@ -4,19 +4,44 @@ namespace Sour;
 
 public sealed class CameraController : Component
 {
-	private Vector3 lookAngles;
+	private Quaternion lookAngles;
 	private float moveSpeed = 6;
-	private float lookSpeed = 3;
+	private float lookSpeed = 64;
 
-	public override void Update()
+	private float _pitch;
+	private float _yaw;
+	private CircularBuffer<Vector2> _deltaBuffer = new( 2000 );
+	private bool _recordingDelta;
+	private float _timeSinceRecordingStarted;
+
+	public override void Render()
 	{
-		base.Update();
-		var args = Game.CurrentFrameEvent;
-
 		var dt = Time.Delta;
 		var keyboard = Game.Keyboard;
-
 		var delta = Game.Mouse.Delta;
+
+		if ( _timeSinceRecordingStarted >= 1.0f )
+		{
+			if ( _recordingDelta )
+			{
+				Log.Info( _deltaBuffer.ToString() );
+			}
+			_recordingDelta = false;
+			_timeSinceRecordingStarted = 0;
+		}
+
+		if ( keyboard.IsKeyReleased( Keys.G ) && _timeSinceRecordingStarted <= 0.0f )
+		{
+			_recordingDelta = true;
+			_timeSinceRecordingStarted = 0;
+			_deltaBuffer.Clear();
+		}
+
+		if ( _recordingDelta )
+		{
+			_deltaBuffer.Add( delta );
+			_timeSinceRecordingStarted += Time.Delta;
+		}
 
 		var fwd = GameObject.Transform.Forward;
 		var right = GameObject.Transform.Right;
@@ -45,23 +70,26 @@ public sealed class CameraController : Component
 		wishDir *= moveSpeed * dt;
 
 		if ( keyboard.IsKeyDown( Keys.Left ) )
-			lookAngles += Axis.Up * lookSpeed * dt;
+			_yaw += lookSpeed * 0.2f * dt;
 		if ( keyboard.IsKeyDown( Keys.Right ) )
-			lookAngles -= Axis.Up * lookSpeed * dt;
+			_yaw -= lookSpeed * 0.2f * dt;
 
+		if ( keyboard.IsKeyDown( Keys.Down ) )
+			_pitch += lookSpeed * 0.2f * dt;
+		if ( keyboard.IsKeyDown( Keys.Up ) )
+			_pitch -= lookSpeed * 0.2f * dt;
 
 		if ( !Game.Mouse.Visible )
 		{
-			if ( keyboard.IsKeyDown( Keys.Down ) )
-				lookAngles += Axis.Right * lookSpeed * dt;
-			if ( keyboard.IsKeyDown( Keys.Up ) )
-				lookAngles += Axis.Left * lookSpeed * dt;
-
-			lookAngles.X += delta.Y * lookSpeed * dt;
-			lookAngles.Y -= delta.X * lookSpeed * dt;
+			_pitch += delta.Y * lookSpeed * dt;
+			_yaw -= delta.X * lookSpeed * dt;
 		}
 
+		var pitchDegrees = MathHelper.RadiansToDegrees( _pitch );
+		_pitch = MathHelper.DegreesToRadians( Math.Clamp( pitchDegrees, -89.0f, 89.0f ) );
+
 		GameObject.Transform.Position += wishDir;
-		GameObject.Transform.Rotation = Quaternion.FromAxisAngle( Axis.Up, lookAngles.Y ) * Quaternion.FromAxisAngle( Axis.Right, lookAngles.X );
+		lookAngles = Quaternion.FromAxisAngle( Axis.Up, _yaw ) * Quaternion.FromAxisAngle( Axis.Right, _pitch );
+		GameObject.Transform.Rotation = lookAngles;
 	}
 }

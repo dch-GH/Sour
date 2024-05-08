@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sour;
@@ -17,15 +16,16 @@ public sealed class Game : GameWindow
 	public static RenderEventEmitter RenderEmitter;
 	public static bool DebugObjectIdMousePick;
 
+	private FPSCounter _fpsCounter;
 	private GameObject _mainCamera;
 	private Screen _screen;
 	private Editor _editor;
-
 	public Game( GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings ) : base( gameWindowSettings, nativeWindowSettings )
 	{
 		UpdateEmitter = new();
 		RenderEmitter = new();
 		_editor = new();
+		_fpsCounter = new();
 	}
 
 	protected override void OnLoad()
@@ -133,7 +133,7 @@ public sealed class Game : GameWindow
 
 		Keyboard = KeyboardState;
 		Mouse.State = MouseState;
-		Mouse.Delta = MouseState.Delta;
+		Mouse.Delta = MouseState.Delta * Time.Delta;
 
 		// The mouse gets snapped to the window so ignore the insane delta value.
 		if ( Time.IsFirstFrame )
