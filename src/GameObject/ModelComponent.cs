@@ -60,15 +60,10 @@ public class ModelComponent : Component
 
 		Vertices = vertices.ToArray();
 
-		// TODO: Material.Default (just the basic material to fallback to instead of making one here every time)
 		if ( material is null )
-		{
-			Material = new Material( Material.DefaultVertexShaderPath, Material.DefaultFragmentShaderPath );
-		}
+			Material = Material.Defualt;
 		else
-		{
 			Material = material;
-		}
 	}
 
 	public override void Render()

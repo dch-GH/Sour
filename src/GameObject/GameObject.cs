@@ -62,17 +62,19 @@ public sealed class GameObject : IDisposable
 		Dispose();
 	}
 
-	public void AddComponent<T>( T component ) where T : Component
+	public T AddComponent<T>( T component ) where T : Component
 	{
 		_components.Add( component );
 		component.Attach( this );
+		return component;
 	}
 
-	public void AddComponent<T>() where T : Component, new()
+	public T AddComponent<T>() where T : Component, new()
 	{
-		var t = new T();
-		_components.Add( t );
-		t.Attach( this );
+		var component = new T();
+		_components.Add( component );
+		component.Attach( this );
+		return component;
 	}
 
 	public void Update()
