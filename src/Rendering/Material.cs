@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Net;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Sour;
 
@@ -6,18 +7,22 @@ public class Material
 {
 	public const string DefaultVertexShaderPath = "Resources/Shaders/vert.glsl";
 	public const string DefaultFragmentShaderPath = "Resources/Shaders/frag.glsl";
+	public static Material Defualt = new( DefaultVertexShaderPath, DefaultFragmentShaderPath );
 	public int ProgramHandle;
-
 	public Shader Vertex;
 	public Shader Fragment;
+	public Texture? Texture;
 
 	FileSystemWatcher watcher;
 
 	public Action OnFileChanged;
 	public bool NeedsHotload;
 
-	public Material( string vtxShaderPath, string fragShaderPath )
+	public Material( string? vtxShaderPath = null, string? fragShaderPath = null )
 	{
+		vtxShaderPath ??= DefaultVertexShaderPath;
+		fragShaderPath ??= DefaultFragmentShaderPath;
+
 		Vertex = new( ShaderType.VertexShader, vtxShaderPath );
 		Fragment = new( ShaderType.FragmentShader, fragShaderPath );
 
@@ -29,7 +34,13 @@ public class Material
 		watcher = new FileSystemWatcher( Path.GetDirectoryName( vtxShaderPath ) );
 		watcher.EnableRaisingEvents = true;
 		watcher.Changed += Watcher_Changed;
-		Game.Materials.AddMaterial( this );
+		Engine.Materials.AddMaterial( this );
+	}
+
+	public Material WithTexture( Texture texture )
+	{
+		Texture = texture;
+		return this;
 	}
 
 	private void Watcher_Changed( object sender, FileSystemEventArgs e )
@@ -127,6 +138,17 @@ public class Material
 		if ( TryGetUniformLocation( name, out var location ) )
 		{
 			GL.UniformMatrix4( location, false, ref matrix );
+			return true;
+		}
+
+		return false;
+	}
+
+	public bool TrySetUniformSampler2D( string name, Texture texture )
+	{
+		if ( TryGetUniformLocation( name, out var location ) )
+		{
+			GL.Uniform1( location, texture.Handle );
 			return true;
 		}
 

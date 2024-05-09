@@ -1,17 +1,15 @@
 #version 440 core
 
-uniform vec3 lightPos;
+layout(location = 0) out vec4 out_Color;
+layout(location = 1) out vec4 out_ObjectId;
 
 in vec3 Normal;
 in vec3 FragPos;
-out vec4 FragColor;
+in vec4 ObjectId;
 
 void main()
 {
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1);
-    vec3 result = (diffuse);
-    FragColor = vec4(result, 1.0f);
+    out_ObjectId = ObjectId;
+    out_Color = vec4(norm, 1.0f);
 } 

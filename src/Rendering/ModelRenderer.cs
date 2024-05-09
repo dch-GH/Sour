@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Diagnostics;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -6,37 +7,26 @@ namespace Sour;
 
 public struct ModelDrawMission
 {
-	public Model Model;
+	public ModelComponent Model;
 	public Matrix4 Matrix;
 }
 
-public class ModelRenderer
+internal sealed class ModelRenderer : IRender
 {
-	public static Material DefaultShader;
+	private bool wireFrame = false;
+	private Queue<ModelDrawMission> modelMissions;
+	private VertexBuffer vb;
 
-	bool wireFrame = false;
-	Camera camera;
-
-	Queue<ModelDrawMission> modelMissions;
-	VertexBuffer vb;
-
-	Vector3 lightPosition = new Vector3( -2, -16, 2 );
-
-	public ModelRenderer( Game window, Camera cam )
+	public ModelRenderer()
 	{
-		camera = cam;
 		modelMissions = new();
 		vb = new();
-		DefaultShader = new Material(
-			Material.DefaultVertexShaderPath,
-			Material.DefaultFragmentShaderPath
-		);
+
+		Engine.UpdateEmitter.OnUpdateStage += Update;
 	}
 
 	public void Render( FrameEventArgs args )
 	{
-		GL.ClearColor( 0.05f, 0.25f, 0.3f, 1 );
-		GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		if ( modelMissions.Count <= 0 )
 			return;
 
@@ -46,14 +36,10 @@ public class ModelRenderer
 		}
 	}
 
-	public void Update( FrameEventArgs args, KeyboardState keyboard )
+	private void Update( UpdateStage stage, FrameEventArgs args )
 	{
-		var dt = ((float)args.Time);
-
-		if ( keyboard.IsKeyReleased( Keys.Z ) )
+		if ( Engine.Keyboard.IsKeyReleased( Keys.Z ) )
 			wireFrame = !wireFrame;
-
-		lightPosition = camera.Transform.Position;
 	}
 
 	public void PushModelMission( ModelDrawMission mission )
@@ -63,15 +49,8 @@ public class ModelRenderer
 
 	private void DrawModel( ModelDrawMission mission )
 	{
-		var model = mission.Model;
-
-		GL.Enable( EnableCap.CullFace );
-		GL.Enable( EnableCap.DepthTest );
-		vb.Draw( model.Vertices, model.Indices, model.Material is null ? DefaultShader : model.Material,
-			ref mission.Matrix,
-			wireFrame,
-			new( "lightPos", lightPosition ),
-			new( "time", Time.Elapsed ) );
+		Debug.Assert( mission.Model.Material is not null );
+		vb.DrawModel( mission.Model, ref mission.Matrix, wireFrame, [new ShaderUniformVariable( "aObjectId", mission.Model.GameObject.ColorId )] );
 		CheckGLError();
 	}
 
@@ -81,7 +60,7 @@ public class ModelRenderer
 		if ( err != OpenTK.Graphics.OpenGL4.ErrorCode.NoError )
 		{
 			// TODO: Getting InvalidValue here, but it doesn't break anything.
-			Log.Info( err );
+			Log.InfoInternal( err );
 			//throw new Exception( err.ToString() );
 		}
 	}

@@ -5,4 +5,10 @@ public static class Log
 	{
 		Console.WriteLine( i );
 	}
+
+	// Just make it obvious we are logging from engine.
+	internal static void InfoInternal( object i )
+	{
+		Console.WriteLine( string.Format( "[ENGINE]: {0}", i ) );
+	}
 }
