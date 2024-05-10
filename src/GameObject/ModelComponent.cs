@@ -1,9 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System.Data.Common;
+using System.Diagnostics;
 
 namespace Sour;
 
 public class ModelComponent : Component
 {
+	// public Guid Id => _id;
+	// private Guid _id;
 	public Vertex[] Vertices;
 	public int VertexCount => Vertices.Length;
 	public Material? Material;
@@ -12,6 +15,8 @@ public class ModelComponent : Component
 	public uint[] Indices;
 	public Assimp.Vector3D[] Normals;
 	public Assimp.Vector3D[] UVs;
+
+	// public static Dictionary<Guid, List<ModelComponent>> Batches = new();
 
 	public ModelComponent( string path, Material? material = null )
 	{
@@ -64,10 +69,23 @@ public class ModelComponent : Component
 			Material = Material.Defualt;
 		else
 			Material = material;
+
+		// _id = new Guid( path );
+
+		// if ( Batches.TryGetValue( _id, out var batch ) )
+		// {
+		// 	batch.Add( this );
+		// }
+		// else
+		// 	Batches.Add( _id, new List<ModelComponent>() );
 	}
 
 	public override void Render()
 	{
+		// if ( Batches.TryGetValue( _id, out var batch ) )
+		// {
+		// }
+
 		var r = Engine.ModelRenderer;
 		var job = new ModelDrawMission
 		{

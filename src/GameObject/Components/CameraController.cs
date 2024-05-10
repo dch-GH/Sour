@@ -14,7 +14,6 @@ public sealed class CameraController : Component
 	private bool _recordingDelta;
 	private float _timeSinceRecordingStarted;
 
-
 	public override void Render()
 	{
 		var dt = Time.Delta;
@@ -48,49 +47,22 @@ public sealed class CameraController : Component
 		var right = GameObject.Transform.Right;
 		var up = GameObject.Transform.Up;
 
-		Vector3 wishDir = Vector3.Zero;
+		Vector2 wishDir = Vector2.Zero;
 
 		if ( keyboard.IsKeyDown( Keys.W ) )
-			wishDir += fwd;
+			wishDir += Axis2d.Up;
 		if ( keyboard.IsKeyDown( Keys.S ) )
-			wishDir -= fwd;
+			wishDir -= Axis2d.Up;
 
 		if ( keyboard.IsKeyDown( Keys.A ) )
-			wishDir += right;
+			wishDir += Axis2d.Right;
 		if ( keyboard.IsKeyDown( Keys.D ) )
-			wishDir -= right;
-
-		if ( keyboard.IsKeyDown( Keys.R ) )
-			wishDir += up;
-		if ( keyboard.IsKeyDown( Keys.F ) )
-			wishDir -= up;
+			wishDir -= Axis2d.Right;
 
 		if ( wishDir.LengthSquared > 0 )
 			wishDir.Normalize();
 
 		wishDir *= moveSpeed * dt;
-
-		if ( keyboard.IsKeyDown( Keys.Left ) )
-			_yaw += lookSpeed * 0.2f * dt;
-		if ( keyboard.IsKeyDown( Keys.Right ) )
-			_yaw -= lookSpeed * 0.2f * dt;
-
-		if ( keyboard.IsKeyDown( Keys.Down ) )
-			_pitch += lookSpeed * 0.2f * dt;
-		if ( keyboard.IsKeyDown( Keys.Up ) )
-			_pitch -= lookSpeed * 0.2f * dt;
-
-		if ( !Engine.Mouse.Visible )
-		{
-			_pitch += delta.Y * lookSpeed * dt;
-			_yaw -= delta.X * lookSpeed * dt;
-		}
-
-		var pitchDegrees = MathHelper.RadiansToDegrees( _pitch );
-		_pitch = MathHelper.DegreesToRadians( Math.Clamp( pitchDegrees, -89.0f, 89.0f ) );
-
 		GameObject.Transform.Position += wishDir;
-		lookAngles = Quaternion.FromAxisAngle( Axis.Up, _yaw ) * Quaternion.FromAxisAngle( Axis.Right, _pitch );
-		GameObject.Transform.Rotation = lookAngles;
 	}
 }

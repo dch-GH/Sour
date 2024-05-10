@@ -7,10 +7,11 @@ public sealed class GameObject : IDisposable
 	// Unique Id.
 	public uint Id => _id;
 	private readonly uint _id;
+	public bool Uncullable;
 	public static List<GameObject> All => _all;
-	public Transform Transform;
-	public Vector3 Position => Transform.Position;
-	public Quaternion Rotation => Transform.Rotation;
+	public Transform2d Transform;
+	public Vector2 Position => Transform.Position;
+	public float Rotation => Transform.Rotation;
 	public Box3 Bounds;
 	public Color4 ColorId => _colorId;
 	private Color4 _colorId;
@@ -22,10 +23,7 @@ public sealed class GameObject : IDisposable
 
 	internal GameObject()
 	{
-		DateTime epochStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
-		TimeSpan span = DateTime.UtcNow - epochStart;
-
-		_id = (uint)span.TotalMilliseconds;
+		_id = Util.TimestampId();
 
 		byte red = (byte)(_id >> 16 & 0xFF);
 		byte green = (byte)(_id >> 8 & 0xFF);
@@ -107,11 +105,13 @@ public sealed class GameObject : IDisposable
 		for ( int i = 0; i < _all.Count; i++ )
 		{
 			GameObject? go = _all[i];
+			if ( !go.Uncullable && !Camera.Main.ShouldRender( go.Transform.Position.ToVector3() ) )
+				continue;
 			go.Render();
 		}
 	}
 
-	public static GameObject Spawn( Vector3 position, Quaternion Rotation )
+	public static GameObject Spawn( Vector2 position, float Rotation )
 	{
 		var go = new GameObject();
 		go.Transform.Position = position;
@@ -121,7 +121,7 @@ public sealed class GameObject : IDisposable
 
 	public static GameObject Spawn()
 	{
-		return Spawn( Vector3.Zero, Quaternion.Identity );
+		return Spawn( Vector2.Zero, 0.0f );
 	}
 
 	public static GameObject? GetFromId( Color255 color )

@@ -1,6 +1,9 @@
 ﻿using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using VelcroPhysics.Dynamics;
+using VelcroPhysics.Collision.Shapes;
+using VelcroPhysics.Templates;
 
 namespace Sour;
 
@@ -15,6 +18,7 @@ public sealed class Engine : GameWindow
 
 	internal static MaterialManager Materials;
 	internal static ModelRenderer ModelRenderer;
+	internal static PhysicsSystem Physics;
 	internal static bool DebugObjectIdMousePick;
 
 	private FPSCounter _fpsCounter;
@@ -40,6 +44,8 @@ public sealed class Engine : GameWindow
 		ModelRenderer = new();
 		DebugDraw.Init();
 
+		Physics = new( new Vector2( 0, -9f ) );
+
 		var screenMaterial = new Material( "Resources/Shaders/Screen/vert_screen.glsl", "Resources/Shaders/Screen/frag_screen.glsl" );
 		_screen = new( ScreenSize, screenMaterial, new VertexBuffer() );
 
@@ -48,25 +54,20 @@ public sealed class Engine : GameWindow
 		Mouse.Visible = true;
 
 		_mainCamera = GameObject.Spawn();
-		_mainCamera.Transform.Position = new Vector3( 0, 0, -5 );
+		_mainCamera.Uncullable = true;
+		_mainCamera.Transform.Position = new Vector2( 0, 0 );
 		_mainCamera.AddComponent( new Camera() );
 		_mainCamera.AddComponent( new CameraController() );
 
 		var cube = GameObject.Spawn();
 		cube.AddComponent( new ModelComponent( "Resources/Models/Box/box.fbx" ) );
-		cube.Transform.Rotation += Quaternion.FromAxisAngle( Axis.Right, 35f );
+		cube.AddComponent( PhysicsSystem.CreatePhysics( BodyType.Dynamic,
+			new FixtureTemplate() { Density = 100, Shape = new CircleShape( 32, 100 ) } ) );
 
 		var cone = GameObject.Spawn();
 		cone.AddComponent( new ModelComponent( "Resources/Models/Cone/cone.obj", new Material( fragShaderPath: "Resources/Shaders/frag.glsl" ) ) );
-		cone.Transform.Position += Axis.Right * 3f;
+		cone.Transform.Position += Axis2d.Right * 3f;
 		cone.AddComponent<RotatorComponent>();
-
-		var tilemap = GameObject.Spawn().AddComponent<Tilemap>();
-	}
-
-	public override void Run()
-	{
-		base.Run();
 	}
 
 	protected override void OnRenderFrame( FrameEventArgs args )
@@ -155,6 +156,7 @@ public sealed class Engine : GameWindow
 		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PreUpdate, args );
 
 		GameObject.UpdateAll();
+
 		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.Update, args );
 
 		UpdateEmitter.OnUpdateStage?.Invoke( UpdateStage.PostUpdate, args );
